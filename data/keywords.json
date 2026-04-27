@@ -1,0 +1,46 @@
+{
+  "high_priority": [
+    { "q": "real estate developers bali", "lang": "en", "country": "id", "tag": "homepage_primary", "engine": "google" },
+    { "q": "bali real estate", "lang": "en", "country": "id", "tag": "homepage_core", "engine": "google" },
+    { "q": "real estate bali", "lang": "en", "country": "id", "tag": "homepage_core", "engine": "google" },
+    { "q": "bali real estate agents", "lang": "en", "country": "id", "tag": "homepage_core", "engine": "google" },
+    { "q": "real estate company bali", "lang": "en", "country": "id", "tag": "homepage_core", "engine": "google" },
+    { "q": "bali property investment", "lang": "en", "country": "id", "tag": "investment", "engine": "google" },
+    { "q": "bali villa investment", "lang": "en", "country": "id", "tag": "investment", "engine": "google" },
+    { "q": "bali property for sale", "lang": "en", "country": "id", "tag": "transactional", "engine": "google" },
+    { "q": "buy property in bali", "lang": "en", "country": "id", "tag": "transactional", "engine": "google" },
+    { "q": "property bali", "lang": "en", "country": "id", "tag": "transactional", "engine": "google" }
+  ],
+  "location": [
+    { "q": "canggu real estate", "lang": "en", "country": "id", "tag": "canggu", "engine": "google" },
+    { "q": "canggu real estate agent", "lang": "en", "country": "id", "tag": "canggu", "engine": "google" },
+    { "q": "villa canggu", "lang": "en", "country": "id", "tag": "canggu", "engine": "google" },
+    { "q": "villa nusa dua", "lang": "en", "country": "id", "tag": "nusa_dua", "engine": "google" },
+    { "q": "villa umalas", "lang": "en", "country": "id", "tag": "umalas", "engine": "google" },
+    { "q": "sanur apartments", "lang": "en", "country": "id", "tag": "sanur", "engine": "google" }
+  ],
+  "project": [
+    { "q": "magnum resort berawa", "lang": "en", "country": "id", "tag": "berawa_brand", "engine": "google" },
+    { "q": "sky stars villa", "lang": "en", "country": "id", "tag": "skystars_brand", "engine": "google" }
+  ],
+  "advisor": [
+    { "q": "property advisor", "lang": "en", "country": "id", "tag": "advisor", "engine": "google" },
+    { "q": "property investment advisor", "lang": "en", "country": "id", "tag": "advisor", "engine": "google" }
+  ],
+  "brand_baseline": [
+    { "q": "magnum estate", "lang": "en", "country": "id", "tag": "brand", "engine": "google" },
+    { "q": "magnum estate bali", "lang": "en", "country": "id", "tag": "brand", "engine": "google" }
+  ],
+  "multilingual": [
+    { "q": "promoteur immobilier bali", "lang": "fr", "country": "fr", "tag": "fr", "engine": "google" }
+  ],
+  "russian_yandex": [
+    { "q": "купить виллу на бали", "lang": "ru", "country": "ru", "tag": "ru_transactional", "engine": "yandex" },
+    { "q": "вилла на бали", "lang": "ru", "country": "ru", "tag": "ru_villa", "engine": "yandex" },
+    { "q": "недвижимость на бали", "lang": "ru", "country": "ru", "tag": "ru_realestate", "engine": "yandex" },
+    { "q": "купить недвижимость на бали", "lang": "ru", "country": "ru", "tag": "ru_transactional", "engine": "yandex" },
+    { "q": "инвестиции в недвижимость бали", "lang": "ru", "country": "ru", "tag": "ru_investment", "engine": "yandex" },
+    { "q": "застройщик бали", "lang": "ru", "country": "ru", "tag": "ru_developer", "engine": "yandex" },
+    { "q": "магнум эстейт", "lang": "ru", "country": "ru", "tag": "ru_brand", "engine": "yandex" }
+  ]
+}

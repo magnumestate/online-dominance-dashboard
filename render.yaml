@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: online-dominance-dashboard
+    runtime: node
+    region: singapore
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: GA4_PROPERTY_ID
+        sync: false
+      - key: GA4_SERVICE_ACCOUNT_KEYFILE
+        sync: false
+      - key: LEAD_EVENTS
+        sync: false
+      - key: ACTIVITY_EVENTS
+        sync: false
+      - key: GSC_SITE_URL
+        sync: false
+      - key: SEO_PROGRESS_SHEET_ID
+        sync: false
+      - key: BRIGHT_DATA_API_KEY
+        sync: false
+      - key: BRIGHT_DATA_SERP_ZONE
+        sync: false
+      - key: SNAPSHOT_TOKEN
+        generateValue: true
+
+  - type: cron
+    name: weekly-snapshot
+    runtime: docker
+    region: singapore
+    plan: free
+    schedule: "0 6 * * 1"
+    dockerCommand: |
+      sh -c "curl -fsS -X POST -H 'Authorization: Bearer $SNAPSHOT_TOKEN' \
+        $DASHBOARD_URL/api/snapshot"
+    envVars:
+      - key: DASHBOARD_URL
+        value: https://online-dominance-dashboard.onrender.com
+      - key: SNAPSHOT_TOKEN
+        fromService:
+          name: online-dominance-dashboard
+          type: web
+          envVarKey: SNAPSHOT_TOKEN

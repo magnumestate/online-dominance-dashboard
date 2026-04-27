@@ -1,0 +1,9 @@
+{
+  "us": { "domain": "magnumestate.com", "name": "Magnum Estate" },
+  "competitors": [
+    { "domain": "bali-home-immo.com", "name": "Bali Home Immo" },
+    { "domain": "mirahdevelopments.com", "name": "Mirah Developments" },
+    { "domain": "cocodevelopmentgroup.com", "name": "Coco Development Group" },
+    { "domain": "breig-property.com", "name": "Breig Property" }
+  ]
+}

@@ -3,54 +3,64 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Bali Real Estate Dominance</title>
+    <title>Magnum Estate — Online Dominance</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <div class="ambient"></div>
     <div class="app">
+
+      <!-- ─────────────── HERO ─────────────── -->
       <header class="hero">
         <div>
-          <p class="eyebrow">Bali Real Estate</p>
-          <h1>Dominance Dashboard</h1>
+          <p class="eyebrow">Q2 · 2026</p>
+          <h1>Online&nbsp;Dominance<br/>Index</h1>
           <p class="subhead">
-            Единый контроль трафика, лидов, вовлеченности и охвата из GA4 с индексом
-            доминирования бренда.
+            Сводный показатель присутствия Magnum Estate в digital-канале.
+            Объединяет органический поиск, позиции против конкурентов,
+            конверсию и исполнение SEO-стратегии в одну величину.
           </p>
         </div>
         <div class="dominance-card">
-          <div class="dominance-label">Индекс доминирования</div>
-          <div class="dominance-score" id="dominanceScore">—</div>
-          <div class="dominance-status" id="dominanceStatus">—</div>
-          <div class="dominance-bar">
-            <div class="dominance-fill" id="dominanceFill"></div>
+          <div>
+            <div class="dominance-label">Текущее значение</div>
+            <div class="dominance-score" id="dominanceScore">—</div>
           </div>
-          <div class="dominance-foot">100 = стабильность, 120+ = доминирование</div>
+          <div>
+            <div class="dominance-status" id="dominanceStatus">—</div>
+            <div class="dominance-bar">
+              <div class="dominance-fill" id="dominanceFill"></div>
+            </div>
+            <div class="dominance-foot">
+              <span>100 = стабильность · 130+ = доминирование</span>
+            </div>
+          </div>
         </div>
       </header>
 
+      <!-- ─────────────── CONTROLS ─────────────── -->
       <section class="controls">
         <div class="control">
-          <label>Начало периода</label>
+          <label for="startDate">Период · от</label>
           <input type="date" id="startDate" />
         </div>
         <div class="control">
-          <label>Конец периода</label>
+          <label for="endDate">Период · до</label>
           <input type="date" id="endDate" />
         </div>
         <div class="control">
-          <label>Гранулярность</label>
+          <label for="granularity">Шаг</label>
           <select id="granularity">
-            <option value="day">Дни</option>
-            <option value="week">Недели</option>
-            <option value="month">Месяцы</option>
+            <option value="day">День</option>
+            <option value="week">Неделя</option>
+            <option value="month">Месяц</option>
           </select>
         </div>
         <div class="control">
-          <label>Каналы</label>
+          <label for="channelGroup">Канал</label>
           <select id="channelGroup">
             <option value="all">Все источники</option>
-            <option value="social">Социальные (organic + paid)</option>
+            <option value="social">Социальные</option>
             <option value="organic-social">Organic Social</option>
             <option value="paid-social">Paid Social</option>
             <option value="organic">Organic Search</option>
@@ -61,34 +71,95 @@
         <button id="applyFilters">Обновить</button>
       </section>
 
-      <section class="metrics">
-        <article class="metric-card">
-          <h3>Трафик</h3>
-          <div class="metric-value" id="sessionsValue">—</div>
-          <p class="metric-caption">Сеансы за период</p>
-        </article>
-        <article class="metric-card">
-          <h3>Лиды</h3>
-          <div class="metric-value" id="leadsValue">—</div>
-          <p class="metric-caption">События Lead Generation</p>
-        </article>
-        <article class="metric-card">
-          <h3>Вовлеченность</h3>
-          <div class="metric-value" id="engagementValue">—</div>
-          <p class="metric-caption">Engagement rate</p>
-        </article>
-        <article class="metric-card">
-          <h3>Охват</h3>
-          <div class="metric-value" id="reachValue">—</div>
-          <p class="metric-caption">Уникальные пользователи</p>
-        </article>
+      <!-- ─────────────── 01 / TRAFFIC INTELLIGENCE ─────────────── -->
+      <section class="section-block">
+        <p class="section-marker"><span class="num">01</span>Traffic Intelligence</p>
+        <div class="section-header">
+          <div>
+            <h2>Объёмы и конверсия за период</h2>
+            <p>Google Analytics 4 — сеансы, лиды, вовлечённость, охват уникальных пользователей.</p>
+          </div>
+        </div>
+        <div class="metrics">
+          <article class="metric-card">
+            <h3>Sessions</h3>
+            <div class="metric-value" id="sessionsValue">—</div>
+            <p class="metric-caption">Сеансы</p>
+          </article>
+          <article class="metric-card">
+            <h3>Leads</h3>
+            <div class="metric-value" id="leadsValue">—</div>
+            <p class="metric-caption">События lead generation</p>
+          </article>
+          <article class="metric-card">
+            <h3>Engagement</h3>
+            <div class="metric-value" id="engagementValue">—</div>
+            <p class="metric-caption">Доля engaged sessions</p>
+          </article>
+          <article class="metric-card">
+            <h3>Reach</h3>
+            <div class="metric-value" id="reachValue">—</div>
+            <p class="metric-caption">Уникальные пользователи</p>
+          </article>
+        </div>
       </section>
 
-      <section class="source-section">
+      <!-- ─────────────── 02 / SEARCH POSITION ─────────────── -->
+      <section class="section-block">
+        <p class="section-marker"><span class="num">02</span>Search Position</p>
+        <div class="section-header">
+          <div>
+            <h2>Brand vs Non-Brand</h2>
+            <p>Search Console: бренд работает, рост non-brand — главный приоритет квартала.</p>
+          </div>
+          <span id="gscState" class="tag muted">—</span>
+        </div>
+        <div class="split-grid">
+          <article class="split-card brand">
+            <div class="split-label">Branded</div>
+            <div class="split-value" id="brandClicks">—</div>
+            <div class="split-meta" id="brandImpressions">— показов</div>
+          </article>
+          <article class="split-card non-brand">
+            <div class="split-label">Non-Branded</div>
+            <div class="split-value" id="nonBrandClicks">—</div>
+            <div class="split-meta" id="nonBrandImpressions">— показов</div>
+          </article>
+          <article class="split-card total">
+            <div class="split-label">Avg CTR / Position</div>
+            <div class="split-value" id="gscCtr">—</div>
+            <div class="split-meta" id="gscPosition">средняя позиция —</div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ─────────────── 03 / COMPETITIVE SERP ─────────────── -->
+      <section class="section-block">
+        <p class="section-marker"><span class="num">03</span>Competitive SERP</p>
+        <div class="section-header">
+          <div>
+            <h2>Позиции Magnum Estate vs конкуренты</h2>
+            <p>Weekly snapshot через Bright Data SERP API — Google + Yandex. Лучшая позиция в строке выделена золотом.</p>
+          </div>
+          <span id="serpState" class="tag muted">—</span>
+        </div>
+        <div class="source-table-wrap">
+          <table class="serp-table" id="serpTable">
+            <thead>
+              <tr id="serpTableHead"></tr>
+            </thead>
+            <tbody id="serpTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ─────────────── 04 / ACQUISITION ─────────────── -->
+      <section class="section-block">
+        <p class="section-marker"><span class="num">04</span>Acquisition</p>
         <div class="section-header">
           <div>
             <h2>Источники трафика</h2>
-            <p>Точные source / medium из GA4 с лидами и вовлеченностью.</p>
+            <p>Source / medium / channel из GA4 с разбивкой по сеансам, лидам и lead rate.</p>
           </div>
           <span id="sourceCount">—</span>
         </div>
@@ -96,14 +167,14 @@
           <table class="source-table">
             <thead>
               <tr>
-                <th>Источник</th>
+                <th>Source</th>
                 <th>Medium</th>
-                <th>Канал</th>
-                <th>Сеансы</th>
-                <th>Пользователи</th>
-                <th>Лиды</th>
+                <th>Channel</th>
+                <th>Sessions</th>
+                <th>Users</th>
+                <th>Leads</th>
                 <th>Lead rate</th>
-                <th>Вовлеченность</th>
+                <th>Engagement</th>
               </tr>
             </thead>
             <tbody id="sourceTableBody"></tbody>
@@ -111,49 +182,98 @@
         </div>
       </section>
 
-      <section class="charts">
-        <div class="chart-card">
-          <div class="chart-header">
-            <h3>Трафик vs Лиды</h3>
-            <span class="chart-meta" id="periodLabel">—</span>
+      <!-- ─────────────── 05 / STRATEGIC EXECUTION ─────────────── -->
+      <section class="section-block">
+        <p class="section-marker"><span class="num">05</span>Strategic Execution</p>
+        <div class="section-header">
+          <div>
+            <h2>SEO Recommendations Progress</h2>
+            <p>Прогресс по контент-плану — Authoritative Content sheet.</p>
           </div>
-          <div class="chart" id="trafficChart"></div>
+          <span id="seoState" class="tag muted">—</span>
         </div>
-        <div class="chart-card">
-          <div class="chart-header">
-            <h3>Вовлеченность</h3>
-            <span class="chart-meta">Engagement rate</span>
+        <div class="progress-summary">
+          <div class="progress-pct" id="seoPct">—</div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="seoFill"></div>
           </div>
-          <div class="chart" id="engagementChart"></div>
+          <div class="progress-meta" id="seoMeta">—</div>
+        </div>
+        <div class="cluster-grid" id="clusterGrid"></div>
+      </section>
+
+      <!-- ─────────────── 06 / TIME SERIES ─────────────── -->
+      <section class="section-block">
+        <p class="section-marker"><span class="num">06</span>Time Series</p>
+        <div class="section-header">
+          <div>
+            <h2>Динамика за период</h2>
+            <p>Трафик и лиды, тренд индекса доминирования, вовлечённость.</p>
+          </div>
+        </div>
+        <div class="charts">
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Sessions / Leads</h3>
+              <span class="chart-meta" id="periodLabel">—</span>
+            </div>
+            <div class="chart" id="trafficChart"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Dominance Index</h3>
+              <span class="chart-meta" id="diMeta">30 дней</span>
+            </div>
+            <div class="chart" id="diTrendChart"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Engagement</h3>
+              <span class="chart-meta">% engaged</span>
+            </div>
+            <div class="chart" id="engagementChart"></div>
+          </div>
         </div>
       </section>
 
-      <section class="insights">
-        <div class="insight-card">
-          <h3>Как считается индекс</h3>
-          <p>
-            Индекс доминирования сравнивает текущий период с предыдущим такой же длины
-            и взвешивает рост по трафику, лидам, вовлеченности и охвату.
-          </p>
-          <div class="weights">
-            <div>Трафик: 35%</div>
-            <div>Лиды: 35%</div>
-            <div>Вовлеченность: 20%</div>
-            <div>Охват: 10%</div>
+      <!-- ─────────────── 07 / NOTES ─────────────── -->
+      <section class="section-block">
+        <p class="section-marker"><span class="num">07</span>Notes &amp; Definitions</p>
+        <div class="section-header">
+          <div>
+            <h2>Методология и контекст</h2>
+            <p>Веса индекса, отслеживаемые события, статус источников.</p>
           </div>
         </div>
-        <div class="insight-card">
-          <h3>Lead Generation события</h3>
-          <ul id="leadEventsList"></ul>
-        </div>
-        <div class="insight-card">
-          <h3>Активности (все события)</h3>
-          <ul id="activityList"></ul>
+        <div class="insights">
+          <div class="insight-card">
+            <h3>Index weights</h3>
+            <p>Dominance Index 2.0 объединяет рост non-brand, SERP-покрытие, рост лидов, рост трафика и прогресс SEO-плана.</p>
+            <div class="weights">
+              <div><span>Non-brand</span><span>30%</span></div>
+              <div><span>SERP top-10</span><span>25%</span></div>
+              <div><span>Leads</span><span>20%</span></div>
+              <div><span>Traffic</span><span>15%</span></div>
+              <div><span>SEO progress</span><span>10%</span></div>
+            </div>
+          </div>
+          <div class="insight-card">
+            <h3>Lead events (GA4)</h3>
+            <ul id="leadEventsList"></ul>
+          </div>
+          <div class="insight-card">
+            <h3>Activity events</h3>
+            <ul id="activityList"></ul>
+          </div>
+          <div class="insight-card">
+            <h3>Sources</h3>
+            <ul id="sourceStatusList"></ul>
+          </div>
         </div>
       </section>
 
       <footer class="footer">
-        <span>Источник: Google Analytics 4</span>
+        <span>GA4 · GSC · Bright Data · Sheets</span>
         <span id="previousPeriod">—</span>
       </footer>
     </div>

@@ -1,18 +1,20 @@
 import express from "express";
 import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { addDays, toDateString, previousPeriod } from "./utils.js";
+import * as ga4 from "./sources/ga4.js";
+import * as gsc from "./sources/gsc.js";
+import * as serp from "./sources/serp.js";
+import * as seoProgress from "./sources/seo-progress.js";
+import { dominanceIndex } from "./score.js";
 import {
-  normalizePropertyId,
-  parseLeadEvents,
-  parseActivityEvents,
-  toDateString,
-  addDays,
-  daysBetween,
-  formatDimensionValue,
-  buildChannelFilter,
-  runReport,
-} from "./ga4.js";
+  writeSnapshot,
+  readLatestSnapshot,
+  recordDominance,
+  dominanceHistory,
+} from "./cache.js";
 
 dotenv.config();
 
@@ -21,345 +23,228 @@ const port = process.env.PORT || 3000;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "..", "public");
 
+app.use(express.json());
 app.use(express.static(publicDir));
 
 app.get("/api/health", (_req, res) => {
-  res.json({ ok: true });
+  res.json({
+    ok: true,
+    sources: {
+      ga4: ga4.isConfigured(),
+      gsc: gsc.isConfigured(),
+      serp: serp.isConfigured(),
+      seoProgress: seoProgress.isConfigured(),
+    },
+  });
 });
+
+function defaultRange(req) {
+  const today = new Date();
+  const defaultEnd = addDays(today, -1);
+  const defaultStart = addDays(defaultEnd, -29);
+  const startDate = req.query.startDate || toDateString(defaultStart);
+  const endDate = req.query.endDate || toDateString(defaultEnd);
+  const prev = previousPeriod(startDate, endDate);
+  return { startDate, endDate, prev };
+}
+
+async function settled(label, promise) {
+  try {
+    return { label, ok: true, data: await promise };
+  } catch (err) {
+    console.error(`[${label}]`, err.message);
+    return { label, ok: false, error: err.message };
+  }
+}
 
 app.get("/api/dashboard", async (req, res) => {
   try {
     const granularity = (req.query.granularity || "day").toLowerCase();
     const channelGroup = (req.query.channelGroup || "all").toLowerCase();
+    const { startDate, endDate, prev } = defaultRange(req);
 
-    const today = new Date();
-    const defaultEnd = addDays(today, -1);
-    const defaultStart = addDays(defaultEnd, -29);
-
-    const startDate = req.query.startDate || toDateString(defaultStart);
-    const endDate = req.query.endDate || toDateString(defaultEnd);
-
-    const dimensionMap = {
-      day: "date",
-      week: "yearWeek",
-      month: "yearMonth",
-    };
-
-    const dimensionName = dimensionMap[granularity] || "date";
-
-    const property = normalizePropertyId(process.env.GA4_PROPERTY_ID);
-    const leadEvents = parseLeadEvents();
-    const activityEvents = parseActivityEvents();
-
-    const channelFilter = buildChannelFilter(channelGroup);
-
-    const trafficResponse = await runReport({
-      property,
-      startDate,
-      endDate,
-      dimensions: [dimensionName],
-      metrics: ["sessions", "totalUsers", "engagedSessions", "engagementRate"],
-      dimensionFilter: channelFilter,
-    });
-
-    const leadFilter = leadEvents.length
-      ? {
-          andGroup: {
-            expressions: [
-              {
-                filter: {
-                  fieldName: "eventName",
-                  inListFilter: { values: leadEvents },
-                },
-              },
-              ...(channelFilter ? [channelFilter] : []),
-            ],
-          },
-        }
-      : channelFilter;
-
-    const leadResponse = await runReport({
-      property,
-      startDate,
-      endDate,
-      dimensions: [dimensionName],
-      metrics: ["eventCount"],
-      dimensionFilter: leadFilter,
-    });
-
-    const currentLeadTotalResponse = await runReport({
-      property,
-      startDate,
-      endDate,
-      dimensions: [],
-      metrics: ["eventCount"],
-      dimensionFilter: leadFilter,
-    });
-
-    const activityFilter = activityEvents.length
-      ? {
-          andGroup: {
-            expressions: [
-              {
-                filter: {
-                  fieldName: "eventName",
-                  inListFilter: { values: activityEvents },
-                },
-              },
-              ...(channelFilter ? [channelFilter] : []),
-            ],
-          },
-        }
-      : channelFilter;
-
-    const activityResponse = activityEvents.length
-      ? await runReport({
-          property,
-          startDate,
-          endDate,
-          dimensions: ["eventName"],
-          metrics: ["eventCount"],
-          dimensionFilter: activityFilter,
-        })
-      : { rows: [] };
-
-    const sourceDimensions = [
-      "sessionSource",
-      "sessionMedium",
-      "sessionDefaultChannelGroup",
-    ];
-
-    const sourceTrafficResponse = await runReport({
-      property,
-      startDate,
-      endDate,
-      dimensions: sourceDimensions,
-      metrics: ["sessions", "totalUsers", "engagedSessions"],
-      dimensionFilter: channelFilter,
-    });
-
-    const sourceLeadResponse = await runReport({
-      property,
-      startDate,
-      endDate,
-      dimensions: sourceDimensions,
-      metrics: ["eventCount"],
-      dimensionFilter: leadFilter,
-    });
-
-    const trafficRows = trafficResponse.rows || [];
-    const leadRows = leadResponse.rows || [];
-    const activityRows = activityResponse.rows || [];
-    const sourceTrafficRows = sourceTrafficResponse.rows || [];
-    const sourceLeadRows = sourceLeadResponse.rows || [];
-
-    const leadByKey = new Map();
-    for (const row of leadRows) {
-      const key = row.dimensionValues?.[0]?.value || "";
-      const value = Number(row.metricValues?.[0]?.value || 0);
-      leadByKey.set(key, (leadByKey.get(key) || 0) + value);
+    const tasks = [];
+    if (ga4.isConfigured()) {
+      tasks.push(
+        settled(
+          "ga4",
+          ga4.fetchGa4Dashboard({ startDate, endDate, granularity, channelGroup })
+        )
+      );
     }
-
-    const series = trafficRows.map((row) => {
-      const key = row.dimensionValues?.[0]?.value || "";
-      const sessions = Number(row.metricValues?.[0]?.value || 0);
-      const totalUsers = Number(row.metricValues?.[1]?.value || 0);
-      const engagedSessions = Number(row.metricValues?.[2]?.value || 0);
-      const engagementRate = Number(row.metricValues?.[3]?.value || 0);
-      const leads = Number(leadByKey.get(key) || 0);
-
-      return {
-        period: formatDimensionValue(granularity, key),
-        sessions,
-        totalUsers,
-        engagedSessions,
-        engagementRate,
-        leads,
-      };
-    }).sort((a, b) => a.period.localeCompare(b.period));
-
-    const activities = activityRows
-      .map((row) => {
-        const name = row.dimensionValues?.[0]?.value || "";
-        const count = Number(row.metricValues?.[0]?.value || 0);
-        return { name, count };
-      })
-      .filter((item) => item.name)
-      .sort((a, b) => b.count - a.count);
-
-    const sourceLeadByKey = new Map();
-    for (const row of sourceLeadRows) {
-      const source = row.dimensionValues?.[0]?.value || "(not set)";
-      const medium = row.dimensionValues?.[1]?.value || "(not set)";
-      const channel = row.dimensionValues?.[2]?.value || "Unassigned";
-      const key = buildSourceKey(source, medium, channel);
-      const value = Number(row.metricValues?.[0]?.value || 0);
-      sourceLeadByKey.set(key, (sourceLeadByKey.get(key) || 0) + value);
+    if (gsc.isConfigured()) {
+      tasks.push(
+        settled(
+          "gsc",
+          gsc.fetchGscSnapshot({
+            startDate,
+            endDate,
+            previousStartDate: prev.startDate,
+            previousEndDate: prev.endDate,
+          })
+        )
+      );
     }
+    const serpCached = readLatestSnapshot("serp");
+    const seoCached = readLatestSnapshot("seo-progress");
 
-    const trafficSources = sourceTrafficRows
-      .map((row) => {
-        const source = row.dimensionValues?.[0]?.value || "(not set)";
-        const medium = row.dimensionValues?.[1]?.value || "(not set)";
-        const channel = row.dimensionValues?.[2]?.value || "Unassigned";
-        const sessions = Number(row.metricValues?.[0]?.value || 0);
-        const totalUsers = Number(row.metricValues?.[1]?.value || 0);
-        const engagedSessions = Number(row.metricValues?.[2]?.value || 0);
-        const leads = Number(sourceLeadByKey.get(buildSourceKey(source, medium, channel)) || 0);
+    const results = await Promise.all(tasks);
+    const byLabel = Object.fromEntries(results.map((r) => [r.label, r]));
 
-        return {
-          source,
-          medium,
-          channel,
-          sessions,
-          totalUsers,
-          engagedSessions,
-          engagementRate: sessions ? engagedSessions / sessions : 0,
-          leads,
-          leadRate: sessions ? leads / sessions : 0,
-        };
-      })
-      .sort((a, b) => b.sessions - a.sessions);
+    const ga4Data = byLabel.ga4?.ok ? byLabel.ga4.data : null;
+    const gscData = byLabel.gsc?.ok ? byLabel.gsc.data : null;
+    const serpData = serpCached?.payload || null;
+    const seoData = seoCached?.payload || null;
 
-    const totals = series.reduce(
-      (acc, item) => {
-        acc.sessions += item.sessions;
-        acc.totalUsers += item.totalUsers;
-        acc.engagedSessions += item.engagedSessions;
-        return acc;
-      },
-      { sessions: 0, totalUsers: 0, engagedSessions: 0, leads: 0 }
-    );
-
-    const currentLeadTotalRow = currentLeadTotalResponse.rows?.[0];
-    totals.leads = Number(currentLeadTotalRow?.metricValues?.[0]?.value || 0);
-
-    const engagementRateTotal = totals.sessions
-      ? totals.engagedSessions / totals.sessions
-      : 0;
-
-    const currentTotals = {
-      sessions: totals.sessions,
-      totalUsers: totals.totalUsers,
-      leads: totals.leads,
-      engagementRate: engagementRateTotal,
-    };
-
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const totalDays = daysBetween(start, end);
-    const previousEnd = addDays(start, -1);
-    const previousStart = addDays(previousEnd, -(totalDays - 1));
-
-    const previousStartDate = toDateString(previousStart);
-    const previousEndDate = toDateString(previousEnd);
-
-    const previousTraffic = await runReport({
-      property,
-      startDate: previousStartDate,
-      endDate: previousEndDate,
-      dimensions: [],
-      metrics: ["sessions", "totalUsers", "engagedSessions", "engagementRate"],
-      dimensionFilter: channelFilter,
+    const dominance = dominanceIndex({
+      ga4: ga4Data,
+      gsc: gscData,
+      serp: serpData,
+      seoProgress: seoData,
     });
 
-    const previousLead = await runReport({
-      property,
-      startDate: previousStartDate,
-      endDate: previousEndDate,
-      dimensions: [],
-      metrics: ["eventCount"],
-      dimensionFilter: leadFilter,
-    });
+    const history = (() => {
+      try {
+        return dominanceHistory(30);
+      } catch {
+        return [];
+      }
+    })();
 
-    const previousTrafficRow = previousTraffic.rows?.[0];
-    const previousLeadRow = previousLead.rows?.[0];
-
-    const previousTotals = {
-      sessions: Number(previousTrafficRow?.metricValues?.[0]?.value || 0),
-      totalUsers: Number(previousTrafficRow?.metricValues?.[1]?.value || 0),
-      engagedSessions: Number(previousTrafficRow?.metricValues?.[2]?.value || 0),
-      engagementRate: Number(previousTrafficRow?.metricValues?.[3]?.value || 0),
-      leads: Number(previousLeadRow?.metricValues?.[0]?.value || 0),
+    const meta = ga4Data?.meta || {
+      startDate,
+      endDate,
+      granularity,
+      channelGroup,
+      previousStartDate: prev.startDate,
+      previousEndDate: prev.endDate,
+      leadEvents: [],
+      activityEvents: [],
     };
-
-    const dominance = computeDominanceIndex(currentTotals, previousTotals);
 
     res.json({
-      meta: {
-        startDate,
-        endDate,
-        granularity,
-        channelGroup,
-        previousStartDate,
-        previousEndDate,
-        leadEvents,
-        activityEvents,
-      },
-      totals: currentTotals,
-      previousTotals,
+      meta,
+      totals: ga4Data?.totals || { sessions: 0, leads: 0, totalUsers: 0, engagementRate: 0 },
+      previousTotals: ga4Data?.previousTotals || null,
+      series: ga4Data?.series || [],
+      activities: ga4Data?.activities || [],
+      trafficSources: ga4Data?.trafficSources || [],
+      gsc: gscData,
+      serp: serpData
+        ? { keywords: serpData.keywords, competitors: serpData.competitors, snapshotDate: serpCached.date }
+        : null,
+      seoProgress: seoData
+        ? { ...seoData, snapshotDate: seoCached.date }
+        : null,
       dominance,
-      series,
-      activities,
-      trafficSources,
+      dominanceHistory: history,
+      sources: {
+        ga4: { configured: ga4.isConfigured(), ok: byLabel.ga4?.ok ?? false, error: byLabel.ga4?.error },
+        gsc: { configured: gsc.isConfigured(), ok: byLabel.gsc?.ok ?? false, error: byLabel.gsc?.error },
+        serp: { configured: serp.isConfigured(), cached: Boolean(serpCached), date: serpCached?.date },
+        seoProgress: { configured: seoProgress.isConfigured(), cached: Boolean(seoCached), date: seoCached?.date },
+      },
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      error: "Failed to load GA4 data",
-      details: error.message,
-    });
+    res.status(500).json({ error: "Failed to load dashboard", details: error.message });
   }
 });
 
-function buildSourceKey(source, medium, channel) {
-  return `${source}|||${medium}|||${channel}`;
-}
+app.get("/api/gsc", async (req, res) => {
+  if (!gsc.isConfigured()) return res.status(400).json({ error: "GSC not configured" });
+  try {
+    const { startDate, endDate, prev } = defaultRange(req);
+    const data = await gsc.fetchGscSnapshot({
+      startDate,
+      endDate,
+      previousStartDate: prev.startDate,
+      previousEndDate: prev.endDate,
+    });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-function computeDominanceIndex(current, previous) {
-  const weights = {
-    sessions: 0.35,
-    leads: 0.35,
-    engagementRate: 0.2,
-    totalUsers: 0.1,
-  };
+app.get("/api/serp", async (_req, res) => {
+  const cached = readLatestSnapshot("serp");
+  if (cached) return res.json({ ...cached.payload, snapshotDate: cached.date });
+  if (!serp.isConfigured()) return res.status(400).json({ error: "SERP not configured" });
+  try {
+    const data = await serp.fetchSerpSnapshot();
+    writeSnapshot("serp", data);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-  const score = (value, prev) => {
-    if (!prev || prev <= 0) return value > 0 ? 1.25 : 0;
-    return value / prev;
-  };
+app.get("/api/seo-progress", async (_req, res) => {
+  const cached = readLatestSnapshot("seo-progress");
+  if (cached) return res.json({ ...cached.payload, snapshotDate: cached.date });
+  if (!seoProgress.isConfigured()) return res.status(400).json({ error: "SEO progress not configured" });
+  try {
+    const data = await seoProgress.fetchSeoProgress();
+    writeSnapshot("seo-progress", data);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-  const ratioSessions = score(current.sessions, previous.sessions);
-  const ratioLeads = score(current.leads, previous.leads);
-  const ratioEngagement = score(current.engagementRate, previous.engagementRate);
-  const ratioUsers = score(current.totalUsers, previous.totalUsers);
+app.post("/api/snapshot", async (req, res) => {
+  const token = process.env.SNAPSHOT_TOKEN;
+  if (!token) return res.status(500).json({ error: "SNAPSHOT_TOKEN not set" });
+  if (req.headers.authorization !== `Bearer ${token}`) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
 
-  const weighted =
-    ratioSessions * weights.sessions +
-    ratioLeads * weights.leads +
-    ratioEngagement * weights.engagementRate +
-    ratioUsers * weights.totalUsers;
+  const today = new Date();
+  const endDate = toDateString(addDays(today, -1));
+  const startDate = toDateString(addDays(today, -30));
+  const prev = previousPeriod(startDate, endDate);
 
-  const index = Math.round(weighted * 100);
+  const tasks = [];
+  if (ga4.isConfigured()) {
+    tasks.push(
+      settled("ga4", ga4.fetchGa4Dashboard({ startDate, endDate, granularity: "day", channelGroup: "all" }))
+    );
+  }
+  if (gsc.isConfigured()) {
+    tasks.push(
+      settled("gsc", gsc.fetchGscSnapshot({
+        startDate, endDate, previousStartDate: prev.startDate, previousEndDate: prev.endDate,
+      }))
+    );
+  }
+  if (serp.isConfigured()) tasks.push(settled("serp", serp.fetchSerpSnapshot()));
+  if (seoProgress.isConfigured()) tasks.push(settled("seo-progress", seoProgress.fetchSeoProgress()));
 
-  let status = "Stable";
-  if (index >= 120) status = "Dominating";
-  else if (index <= 90) status = "At Risk";
+  const results = await Promise.all(tasks);
+  const summary = {};
+  for (const r of results) {
+    summary[r.label] = { ok: r.ok, error: r.error };
+    if (r.ok && (r.label === "serp" || r.label === "seo-progress")) {
+      writeSnapshot(r.label, r.data);
+    }
+    if (r.ok && r.label === "ga4") writeSnapshot("ga4-totals", { totals: r.data.totals, previousTotals: r.data.previousTotals });
+    if (r.ok && r.label === "gsc") writeSnapshot("gsc-totals", { totals: r.data.totals, previousTotals: r.data.previousTotals, brandSplit: r.data.brandSplit });
+  }
 
-  return {
-    index,
-    status,
-    breakdown: {
-      ratios: {
-        sessions: ratioSessions,
-        leads: ratioLeads,
-        engagementRate: ratioEngagement,
-        totalUsers: ratioUsers,
-      },
-      weights,
-    },
-  };
-}
+  const byLabel = Object.fromEntries(results.map((r) => [r.label, r]));
+  const dominance = dominanceIndex({
+    ga4: byLabel.ga4?.ok ? byLabel.ga4.data : null,
+    gsc: byLabel.gsc?.ok ? byLabel.gsc.data : null,
+    serp: byLabel.serp?.ok ? byLabel.serp.data : readLatestSnapshot("serp")?.payload,
+    seoProgress: byLabel["seo-progress"]?.ok
+      ? byLabel["seo-progress"].data
+      : readLatestSnapshot("seo-progress")?.payload,
+  });
+
+  recordDominance(dominance);
+  res.json({ ok: true, index: dominance.index, status: dominance.status, summary });
+});
 
 app.listen(port, () => {
   console.log(`Dashboard running on http://localhost:${port}`);
