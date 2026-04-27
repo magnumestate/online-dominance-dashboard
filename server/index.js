@@ -9,9 +9,11 @@ import * as gsc from "./sources/gsc.js";
 import * as serp from "./sources/serp.js";
 import * as seoProgress from "./sources/seo-progress.js";
 import { dominanceIndex } from "./score.js";
+import { diffSerp } from "./diff.js";
 import {
   writeSnapshot,
   readLatestSnapshot,
+  readPreviousSnapshot,
   recordDominance,
   dominanceHistory,
 } from "./cache.js";
@@ -86,6 +88,7 @@ app.get("/api/dashboard", async (req, res) => {
       );
     }
     const serpCached = readLatestSnapshot("serp");
+    const serpPrevCached = serpCached ? readPreviousSnapshot("serp", serpCached.date) : null;
     const seoCached = readLatestSnapshot("seo-progress");
 
     const results = await Promise.all(tasks);
@@ -133,6 +136,14 @@ app.get("/api/dashboard", async (req, res) => {
       serp: serpData
         ? { keywords: serpData.keywords, competitors: serpData.competitors, snapshotDate: serpCached.date }
         : null,
+      serpDiff:
+        serpData && serpPrevCached
+          ? {
+              ...diffSerp(serpData, serpPrevCached.payload, serpData.competitors?.us?.domain),
+              currentDate: serpCached.date,
+              previousDate: serpPrevCached.date,
+            }
+          : null,
       seoProgress: seoData
         ? { ...seoData, snapshotDate: seoCached.date }
         : null,
