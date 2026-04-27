@@ -33,6 +33,13 @@ const messages = {
     "hero.period": "PERIOD",
     "hero.previous": "PREVIOUS",
 
+    "dom.total.formula":
+      "Композит из Web Dominance и AI Visibility, взвешенный по их влиянию на цифровой канал.",
+    "dom.web.formula":
+      "GA4 + GSC + Bright Data SERP + Sheets + Bitrix. non-brand 28% · SERP-top10 22% · лиды 18% · трафик 14% · SEO-план 8% · sales 10%.",
+    "dom.ai.formula":
+      "Probe ChatGPT / Claude / Perplexity / YandexGPT по 32 prompt-семьям. SOV 40% · рост 30% · позитивный sentiment 20% · цитирования 10%.",
+
     "controls.from": "Период · от",
     "controls.to": "Период · до",
     "controls.step": "Шаг",
@@ -197,6 +204,13 @@ const messages = {
     "hero.scaleHint": "100 = stable · 130+ = dominating",
     "hero.period": "PERIOD",
     "hero.previous": "PREVIOUS",
+
+    "dom.total.formula":
+      "Composite of Web Dominance and AI Visibility, weighted by their influence on the digital channel.",
+    "dom.web.formula":
+      "GA4 + GSC + Bright Data SERP + Sheets + Bitrix. non-brand 28% · SERP-top10 22% · leads 18% · traffic 14% · SEO plan 8% · sales 10%.",
+    "dom.ai.formula":
+      "Probe of ChatGPT / Claude / Perplexity / YandexGPT across 32 prompt families. SOV 40% · growth 30% · positive sentiment 20% · citations 10%.",
 
     "controls.from": "Period · from",
     "controls.to": "Period · to",
