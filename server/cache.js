@@ -23,6 +23,14 @@ function getDb() {
       breakdown TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+    CREATE TABLE IF NOT EXISTS briefings (
+      date TEXT PRIMARY KEY,
+      index_value INTEGER,
+      status TEXT,
+      content TEXT NOT NULL,
+      model TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
   return db;
 }
@@ -81,4 +89,29 @@ export function dominanceHistory(days = 30) {
       `SELECT date, index_value AS "index" FROM dominance_history WHERE date >= date('now', ?) ORDER BY date`
     )
     .all(`-${days} days`);
+}
+
+export function recordBriefing(briefing, indexValue, status, date = today()) {
+  const { model, usage, ...narrative } = briefing;
+  getDb()
+    .prepare(
+      "INSERT OR REPLACE INTO briefings (date, index_value, status, content, model) VALUES (?, ?, ?, ?, ?)"
+    )
+    .run(date, indexValue, status, JSON.stringify(narrative), model || null);
+}
+
+export function readLatestBriefing() {
+  const row = getDb()
+    .prepare(
+      "SELECT date, index_value, status, content, model FROM briefings ORDER BY date DESC LIMIT 1"
+    )
+    .get();
+  if (!row) return null;
+  return {
+    date: row.date,
+    index: row.index_value,
+    status: row.status,
+    model: row.model,
+    ...JSON.parse(row.content),
+  };
 }

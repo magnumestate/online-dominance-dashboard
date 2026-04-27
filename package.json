@@ -12,6 +12,7 @@
     "snapshot": "node -e \"fetch('http://localhost:'+(process.env.PORT||3000)+'/api/snapshot',{method:'POST',headers:{Authorization:'Bearer '+process.env.SNAPSHOT_TOKEN}}).then(r=>r.json()).then(console.log)\""
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.91.1",
     "@google-analytics/data": "^4.4.0",
     "better-sqlite3": "^12.9.0",
     "dotenv": "^16.4.5",

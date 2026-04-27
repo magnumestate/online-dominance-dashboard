@@ -11,6 +11,7 @@ Marketing intelligence для Magnum Estate — собирает GA4, Google Sea
 - **SEO progress** — % выполненных рекомендаций из контент-плана
 - **Bitrix24 CRM** — лиды (total/qualified/junk + источники), сделки (won/lost/open), стоимость pipeline
 - **30-дневный тренд** индекса (snapshot-based)
+- **Executive Brief** — еженедельный LLM-нарратив (Claude Opus 4.7) с headline, что выросло, где проседаем, 3 действия, что отслеживать
 
 ## Запуск локально
 
@@ -48,6 +49,8 @@ curl -X POST -H "Authorization: Bearer $SNAPSHOT_TOKEN" \
 | `SEO_PROGRESS_SHEET_ID` | ID Google Sheet с контент-планом |
 | `BITRIX_WEBHOOK_URL` | inbound webhook URL из Bitrix24 (CRM-скоуп) |
 | `SNAPSHOT_TOKEN` | bearer для защиты `/api/snapshot` |
+| `ANTHROPIC_API_KEY` | (опц.) включает еженедельный LLM-брифинг через Claude Opus 4.7 |
+| `ANTHROPIC_BRIEFING_MODEL` | (опц.) переопределить модель — по умолчанию `claude-opus-4-7` |
 
 ## Конфиг данных
 
@@ -77,6 +80,28 @@ DI = 0.28 × Non-brand growth (GSC non-brand clicks vs prev period)
 Каждый компонент капируется в [0, 2]. Итог × 100. Статусы: ≥130 Dominating, ≥110 Gaining, ≤90 Slipping, ≤70 At Risk.
 
 **v2.1 changelog:** добавлен 6-й компонент (sales_execution через Bitrix24 pipeline). Веса остальных уменьшены пропорционально.
+
+## Executive Brief (LLM-нарратив)
+
+Раз в неделю после snapshot'а Claude Opus 4.7 генерирует executive briefing на основе всех собранных данных и записывает в SQLite. Возвращает строгий JSON из 5 полей:
+
+- **headline** — одно предложение, что главное произошло
+- **what_grew** — позитивные движения с цифрами
+- **what_slipped** — негатив и потери против конкурентов
+- **actions** — 3 действия на следующую неделю, по приоритету
+- **watch_next** — что отслеживать дальше
+
+Брифинг отображается в дашборде в секции `08 / Executive Brief` и доступен через `GET /api/briefing`.
+
+**Стоимость:** ~$0.024 за генерацию × 52 недели ≈ **$1.25/год**.
+
+**Запуск без API key:** дашборд работает, секция брифа показывает заглушку.
+
+**Регенерация на лету** (без полного snapshot'а):
+```bash
+curl -X POST -H "Authorization: Bearer $SNAPSHOT_TOKEN" \
+  http://localhost:3000/api/briefing/regenerate
+```
 
 ## Деплой на Render
 

@@ -9,6 +9,7 @@ import * as gsc from "./sources/gsc.js";
 import * as serp from "./sources/serp.js";
 import * as seoProgress from "./sources/seo-progress.js";
 import * as bitrix from "./sources/bitrix.js";
+import * as briefing from "./briefing.js";
 import { dominanceIndex } from "./score.js";
 import { diffSerp } from "./diff.js";
 import {
@@ -17,6 +18,8 @@ import {
   readPreviousSnapshot,
   recordDominance,
   dominanceHistory,
+  recordBriefing,
+  readLatestBriefing,
 } from "./cache.js";
 
 dotenv.config();
@@ -38,6 +41,7 @@ app.get("/api/health", (_req, res) => {
       serp: serp.isConfigured(),
       seoProgress: seoProgress.isConfigured(),
       bitrix: bitrix.isConfigured(),
+      briefing: briefing.isConfigured(),
     },
   });
 });
@@ -167,12 +171,14 @@ app.get("/api/dashboard", async (req, res) => {
       bitrix: bitrixData,
       dominance,
       dominanceHistory: history,
+      briefing: readLatestBriefing(),
       sources: {
         ga4: { configured: ga4.isConfigured(), ok: byLabel.ga4?.ok ?? false, error: byLabel.ga4?.error },
         gsc: { configured: gsc.isConfigured(), ok: byLabel.gsc?.ok ?? false, error: byLabel.gsc?.error },
         serp: { configured: serp.isConfigured(), cached: Boolean(serpCached), date: serpCached?.date },
         seoProgress: { configured: seoProgress.isConfigured(), cached: Boolean(seoCached), date: seoCached?.date },
         bitrix: { configured: bitrix.isConfigured(), ok: byLabel.bitrix?.ok ?? false, error: byLabel.bitrix?.error },
+        briefing: { configured: briefing.isConfigured() },
       },
     });
   } catch (error) {
@@ -239,6 +245,73 @@ app.get("/api/seo-progress", async (_req, res) => {
   }
 });
 
+app.get("/api/briefing", (_req, res) => {
+  const latest = readLatestBriefing();
+  if (!latest) {
+    return res.status(404).json({
+      error: "No briefing available yet. Run /api/snapshot first.",
+      configured: briefing.isConfigured(),
+    });
+  }
+  res.json(latest);
+});
+
+// Regenerate briefing on-demand from cached snapshots — useful for ad-hoc
+// regeneration without re-running expensive source fetches.
+app.post("/api/briefing/regenerate", async (req, res) => {
+  const token = process.env.SNAPSHOT_TOKEN;
+  if (!token || req.headers.authorization !== `Bearer ${token}`) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  if (!briefing.isConfigured()) {
+    return res.status(400).json({ error: "ANTHROPIC_API_KEY not set" });
+  }
+
+  try {
+    const today = new Date();
+    const endDate = toDateString(addDays(today, -1));
+    const startDate = toDateString(addDays(today, -30));
+    const prev = previousPeriod(startDate, endDate);
+
+    const ga4Data = ga4.isConfigured()
+      ? await ga4.fetchGa4Dashboard({ startDate, endDate, granularity: "day", channelGroup: "all" })
+      : null;
+    const gscData = gsc.isConfigured()
+      ? await gsc.fetchGscSnapshot({
+          startDate, endDate,
+          previousStartDate: prev.startDate, previousEndDate: prev.endDate,
+        })
+      : null;
+    const serpCached = readLatestSnapshot("serp");
+    const serpPrevCached = serpCached ? readPreviousSnapshot("serp", serpCached.date) : null;
+    const serpData = serpCached?.payload || null;
+    const serpDiff = serpData && serpPrevCached
+      ? diffSerp(serpData, serpPrevCached.payload, serpData.competitors?.us?.domain)
+      : null;
+    const seoData = readLatestSnapshot("seo-progress")?.payload || null;
+    const dominance = dominanceIndex({ ga4: ga4Data, gsc: gscData, serp: serpData, seoProgress: seoData });
+
+    const facts = briefing.buildFacts({
+      meta: ga4Data?.meta,
+      totals: ga4Data?.totals,
+      previousTotals: ga4Data?.previousTotals,
+      dominance,
+      gsc: gscData,
+      serp: serpData,
+      serpDiff,
+      seoProgress: seoData,
+      dominanceHistory: dominanceHistory(30),
+    });
+
+    const result = await briefing.generateBriefing(facts);
+    recordBriefing(result, dominance.index, dominance.status);
+    res.json({ ok: true, index: dominance.index, status: dominance.status, briefing: result });
+  } catch (err) {
+    console.error("[briefing/regenerate]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post("/api/snapshot", async (req, res) => {
   const token = process.env.SNAPSHOT_TOKEN;
   if (!token) return res.status(500).json({ error: "SNAPSHOT_TOKEN not set" });
@@ -299,6 +372,49 @@ app.post("/api/snapshot", async (req, res) => {
   });
 
   recordDominance(dominance);
+
+  // Generate weekly LLM briefing from this snapshot's data.
+  // Fail-soft: if briefing errors, the rest of the snapshot still completed.
+  if (briefing.isConfigured()) {
+    try {
+      const ga4Data = byLabel.ga4?.ok ? byLabel.ga4.data : null;
+      const gscData = byLabel.gsc?.ok ? byLabel.gsc.data : null;
+      const serpData = byLabel.serp?.ok
+        ? byLabel.serp.data
+        : readLatestSnapshot("serp")?.payload;
+      const serpPrevCached = serpData
+        ? readPreviousSnapshot("serp", toDateString(new Date()))
+        : null;
+      const serpDiffData = serpData && serpPrevCached
+        ? diffSerp(serpData, serpPrevCached.payload, serpData.competitors?.us?.domain)
+        : null;
+      const seoData = byLabel["seo-progress"]?.ok
+        ? byLabel["seo-progress"].data
+        : readLatestSnapshot("seo-progress")?.payload;
+
+      const facts = briefing.buildFacts({
+        meta: ga4Data?.meta,
+        totals: ga4Data?.totals,
+        previousTotals: ga4Data?.previousTotals,
+        dominance,
+        gsc: gscData,
+        serp: serpData,
+        serpDiff: serpDiffData,
+        seoProgress: seoData,
+        dominanceHistory: dominanceHistory(30),
+      });
+
+      const result = await briefing.generateBriefing(facts);
+      recordBriefing(result, dominance.index, dominance.status);
+      summary.briefing = { ok: true, model: result.model, usage: result.usage };
+    } catch (err) {
+      console.error("[snapshot/briefing]", err.message);
+      summary.briefing = { ok: false, error: err.message };
+    }
+  } else {
+    summary.briefing = { ok: false, error: "ANTHROPIC_API_KEY not configured" };
+  }
+
   res.json({ ok: true, index: dominance.index, status: dominance.status, summary });
 });
 

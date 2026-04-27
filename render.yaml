@@ -27,6 +27,8 @@ services:
         sync: false
       - key: BITRIX_WEBHOOK_URL
         sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
       - key: SNAPSHOT_TOKEN
         generateValue: true
 
