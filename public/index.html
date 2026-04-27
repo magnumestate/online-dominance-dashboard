@@ -26,14 +26,15 @@
       </div>
 
       <!-- ─────────────── HERO ─────────────── -->
-      <header class="hero">
+      <header class="hero hero-v3">
         <div>
           <p class="eyebrow">Q2 · 2026</p>
           <h1>Online&nbsp;Dominance<br/>Index</h1>
           <p class="subhead" data-i18n="hero.subhead">
-            Сводный показатель присутствия Magnum Estate в digital-канале.
-            Объединяет органический поиск, позиции против конкурентов,
-            конверсию и исполнение SEO-стратегии в одну величину.
+            Сводный показатель присутствия Magnum Estate в digital и AI-канале.
+            Web Dominance объединяет органический поиск, позиции против конкурентов,
+            конверсию и SEO-исполнение. AI Visibility измеряет долю бренда в ответах
+            ChatGPT, Claude, Perplexity и YandexGPT на ключевые prompt-семьи.
           </p>
           <p class="hero-meta">
             <span id="heroMetaPeriod">PERIOD · —</span>
@@ -41,20 +42,30 @@
             <span id="heroMetaPrev">PREVIOUS · —</span>
           </p>
         </div>
-        <div class="dominance-card">
-          <div>
-            <div class="dominance-label" data-i18n="hero.currentValue">Текущее значение</div>
+        <div class="dominance-row">
+          <article class="dominance-card primary" data-metric="total">
+            <div class="dominance-label">Total Dominance</div>
+            <div class="dominance-score" id="totalDominanceScore">—</div>
+            <div class="dominance-status" id="totalDominanceStatus">—</div>
+            <div class="dominance-spark" id="totalDominanceSpark"></div>
+            <div class="dominance-foot" id="totalDominanceFoot">web 70% · ai 30%</div>
+          </article>
+          <article class="dominance-card" data-metric="web">
+            <div class="dominance-label">Web Dominance</div>
             <div class="dominance-score" id="dominanceScore">—</div>
-          </div>
-          <div>
             <div class="dominance-status" id="dominanceStatus">—</div>
+            <div class="dominance-spark" id="webDominanceSpark"></div>
             <div class="dominance-bar">
               <div class="dominance-fill" id="dominanceFill"></div>
             </div>
-            <div class="dominance-foot">
-              <span data-i18n="hero.scaleHint">100 = стабильность · 130+ = доминирование</span>
-            </div>
-          </div>
+          </article>
+          <article class="dominance-card" data-metric="ai">
+            <div class="dominance-label">AI Visibility</div>
+            <div class="dominance-score" id="aiVisibilityScore">—</div>
+            <div class="dominance-status" id="aiVisibilityStatus">—</div>
+            <div class="dominance-spark" id="aiVisibilitySpark"></div>
+            <div class="dominance-foot" id="aiVisibilityFoot">SOV / mentions / cited</div>
+          </article>
         </div>
       </header>
 
@@ -255,6 +266,59 @@
           <div class="progress-meta" id="seoMeta">—</div>
         </div>
         <div class="cluster-grid" id="clusterGrid"></div>
+      </section>
+
+      <!-- ─────────────── 08 / AI VISIBILITY ─────────────── -->
+      <section class="section-block">
+        <p class="section-marker"><span class="num">08</span>AI Visibility</p>
+        <div class="section-header">
+          <div>
+            <h2>Бренд в ответах LLM и Google AI Overviews</h2>
+            <p>
+              Probe: ~30 prompt-семей × включённые движки (Claude, ChatGPT, Perplexity, YandexGPT)
+              — еженедельный замер Share of Voice, sentiment и цитирования.
+              AI Overviews: реальные блоки Google AI на отслеживаемых ключах.
+            </p>
+          </div>
+          <span id="aiState" class="tag muted">—</span>
+        </div>
+
+        <div class="ai-stats-grid">
+          <article class="ai-stat-card">
+            <div class="ai-stat-label">Share of Voice</div>
+            <div class="ai-stat-value" id="aiSovValue">—</div>
+            <div class="ai-stat-meta" id="aiSovMeta">—</div>
+          </article>
+          <article class="ai-stat-card">
+            <div class="ai-stat-label">Brand mentions</div>
+            <div class="ai-stat-value" id="aiMentionsValue">—</div>
+            <div class="ai-stat-meta" id="aiMentionsMeta">—</div>
+          </article>
+          <article class="ai-stat-card">
+            <div class="ai-stat-label">Cited (with link)</div>
+            <div class="ai-stat-value" id="aiCitedValue">—</div>
+            <div class="ai-stat-meta" id="aiCitedMeta">—</div>
+          </article>
+          <article class="ai-stat-card">
+            <div class="ai-stat-label">Positive sentiment</div>
+            <div class="ai-stat-value" id="aiPositiveValue">—</div>
+            <div class="ai-stat-meta" id="aiPositiveMeta">—</div>
+          </article>
+        </div>
+
+        <div class="ai-overviews-block">
+          <div class="ai-overviews-header">
+            <h3>Google AI Overviews</h3>
+            <span id="aioState" class="tag muted">—</span>
+          </div>
+          <div class="ai-overviews-stats" id="aioStats"></div>
+          <div class="ai-overviews-cards" id="aioCards"></div>
+        </div>
+
+        <div class="ai-opportunities">
+          <h3>Топ возможностей (где конкуренты упомянуты, мы — нет)</h3>
+          <ol class="ai-opportunities-list" id="aiOpportunitiesList"></ol>
+        </div>
       </section>
 
       <!-- ─────────────── 06 / TIME SERIES ─────────────── -->

@@ -13,8 +13,28 @@ const WEIGHTS = {
   salesExecution: 0.10,
 };
 
+const AI_WEIGHTS = {
+  sov: 0.40,
+  growth: 0.30,
+  positive: 0.20,
+  citation: 0.10,
+};
+
+const TOTAL_DOMINANCE_WEIGHTS = {
+  web: Number(process.env.TD_WEIGHT_WEB || 0.7),
+  ai: Number(process.env.TD_WEIGHT_AI || 0.3),
+};
+
 function clip(value, min = 0, max = 2) {
   return Math.max(min, Math.min(max, value));
+}
+
+function statusFor(index) {
+  if (index >= 130) return "Dominating";
+  if (index >= 110) return "Gaining";
+  if (index <= 70) return "At Risk";
+  if (index <= 90) return "Slipping";
+  return "Stable";
 }
 
 export function dominanceIndex({ ga4, gsc, serp, seoProgress, bitrix }) {
@@ -82,19 +102,120 @@ export function dominanceIndex({ ga4, gsc, serp, seoProgress, bitrix }) {
   }
 
   const index = Math.round(weighted * 100);
-  let status = "Stable";
-  if (index >= 130) status = "Dominating";
-  else if (index >= 110) status = "Gaining";
-  else if (index <= 70) status = "At Risk";
-  else if (index <= 90) status = "Slipping";
-
   return {
     index,
-    status,
+    status: statusFor(index),
     breakdown: {
       components,
       weights: WEIGHTS,
       explanations,
     },
   };
+}
+
+export function aiVisibilityScore({ responses, history }) {
+  const components = {};
+  const explanations = {};
+
+  if (!responses || responses.length === 0) {
+    return {
+      index: null,
+      status: "No data",
+      breakdown: {
+        components: {},
+        weights: AI_WEIGHTS,
+        explanations: { all: "No AI probe responses recorded yet" },
+      },
+      stats: { totalResponses: 0 },
+    };
+  }
+
+  const total = responses.length;
+  const brandMentioned = responses.filter((r) => r.brand_mentioned).length;
+  const brandCited = responses.filter((r) => r.brand_cited).length;
+
+  let totalMentions = 0;
+  let usMentions = 0;
+  for (const r of responses) {
+    if (r.brand_mentioned) {
+      usMentions++;
+      totalMentions++;
+    }
+    const compsRaw = typeof r.competitors_mentioned === "string"
+      ? safeJsonArray(r.competitors_mentioned)
+      : (r.competitors_mentioned || []);
+    totalMentions += compsRaw.length;
+  }
+  const sov = totalMentions ? usMentions / totalMentions : 0;
+  components.sov = clip(sov * 2);
+  explanations.sov = `SOV ${(sov * 100).toFixed(1)}% (${usMentions} brand vs ${totalMentions - usMentions} competitor mentions across ${total} responses)`;
+
+  if (Array.isArray(history) && history.length >= 2) {
+    const last = history[history.length - 1];
+    const prev = history[history.length - 2];
+    const ratio = prev?.sov_pct ? last.sov_pct / prev.sov_pct : 1;
+    components.growth = clip(ratio);
+    explanations.growth = `SOV w/w ${(last.sov_pct * 100).toFixed(1)}% vs ${(prev.sov_pct * 100).toFixed(1)}%`;
+  } else {
+    components.growth = 1;
+    explanations.growth = "Insufficient history for growth (need ≥2 weeks)";
+  }
+
+  const classified = responses.filter((r) => r.sentiment != null);
+  if (classified.length > 0) {
+    const usPositive = responses.filter((r) => r.brand_mentioned && r.sentiment === "positive").length;
+    const positiveRatio = brandMentioned ? usPositive / brandMentioned : 0;
+    components.positive = clip(positiveRatio * 2);
+    explanations.positive = `${usPositive}/${brandMentioned} brand mentions are positive (${(positiveRatio * 100).toFixed(0)}%)`;
+  } else {
+    components.positive = 1;
+    explanations.positive = "Sentiment classification not run (ANTHROPIC_API_KEY missing or batch failed)";
+  }
+
+  const citationRatio = brandMentioned ? brandCited / brandMentioned : 0;
+  components.citation = clip(citationRatio * 2);
+  explanations.citation = `${brandCited}/${brandMentioned} brand mentions include domain citation`;
+
+  let weighted = 0;
+  for (const [key, w] of Object.entries(AI_WEIGHTS)) {
+    weighted += components[key] * w;
+  }
+  const index = Math.round(weighted * 100);
+
+  return {
+    index,
+    status: statusFor(index),
+    breakdown: { components, weights: AI_WEIGHTS, explanations },
+    stats: {
+      totalResponses: total,
+      brandMentioned,
+      brandCited,
+      sov_pct: sov,
+      classifiedCount: classified.length,
+    },
+  };
+}
+
+export function totalDominance({ webIndex, aiIndex, weights = TOTAL_DOMINANCE_WEIGHTS }) {
+  if (webIndex == null && aiIndex == null) {
+    return { index: null, status: "No data", weights, breakdown: {} };
+  }
+  if (webIndex == null) return { index: aiIndex, status: statusFor(aiIndex), weights, breakdown: { aiOnly: true } };
+  if (aiIndex == null) return { index: webIndex, status: statusFor(webIndex), weights, breakdown: { webOnly: true } };
+  const blended = Math.round(weights.web * webIndex + weights.ai * aiIndex);
+  return {
+    index: blended,
+    status: statusFor(blended),
+    weights,
+    breakdown: { webIndex, aiIndex },
+  };
+}
+
+function safeJsonArray(s) {
+  try {
+    const v = JSON.parse(s);
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
 }

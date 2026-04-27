@@ -29,6 +29,18 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: PERPLEXITY_API_KEY
+        sync: false
+      - key: YANDEX_GPT_API_KEY
+        sync: false
+      - key: YANDEX_GPT_FOLDER_ID
+        sync: false
+      - key: TD_WEIGHT_WEB
+        value: "0.7"
+      - key: TD_WEIGHT_AI
+        value: "0.3"
       - key: SNAPSHOT_TOKEN
         generateValue: true
 
@@ -41,6 +53,24 @@ services:
     dockerCommand: |
       sh -c "curl -fsS -X POST -H 'Authorization: Bearer $SNAPSHOT_TOKEN' \
         $DASHBOARD_URL/api/snapshot"
+    envVars:
+      - key: DASHBOARD_URL
+        value: https://online-dominance-dashboard.onrender.com
+      - key: SNAPSHOT_TOKEN
+        fromService:
+          name: online-dominance-dashboard
+          type: web
+          envVarKey: SNAPSHOT_TOKEN
+
+  - type: cron
+    name: weekly-ai-brief
+    runtime: docker
+    region: singapore
+    plan: free
+    schedule: "0 1 * * 1"
+    dockerCommand: |
+      sh -c "curl -fsS -X POST -H 'Authorization: Bearer $SNAPSHOT_TOKEN' \
+        $DASHBOARD_URL/api/brief/weekly"
     envVars:
       - key: DASHBOARD_URL
         value: https://online-dominance-dashboard.onrender.com
