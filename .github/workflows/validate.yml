@@ -65,11 +65,14 @@ jobs:
       - name: .env.example covers all process.env reads in server/
         run: |
           set -e
+          # Vars actually read by server code
           grep -rho 'process\.env\.[A-Z_][A-Z0-9_]*' server/ \
             | sed 's/process\.env\.//' \
             | sort -u > /tmp/used.txt
-          grep -Eo '^[A-Z_][A-Z0-9_]*=' .env.example \
-            | tr -d '=' \
+          # Vars documented in .env.example — accept both declared (FOO=)
+          # and commented-out optionals (# FOO=...) as "documented".
+          grep -Eo '^#?[[:space:]]*[A-Z_][A-Z0-9_]*=' .env.example \
+            | sed -E 's/^#?[[:space:]]*//; s/=$//' \
             | sort -u > /tmp/declared.txt
           missing="$(comm -23 /tmp/used.txt /tmp/declared.txt | grep -v '^$' || true)"
           if [ -n "$missing" ]; then
