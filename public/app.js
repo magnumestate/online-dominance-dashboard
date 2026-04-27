@@ -403,6 +403,13 @@ const bitrixPipelineDelta = document.getElementById("bitrixPipelineDelta");
 const bitrixWonValue = document.getElementById("bitrixWonValue");
 const bitrixSourcesBody = document.getElementById("bitrixSourcesBody");
 
+const briefingState = document.getElementById("briefingState");
+const briefingHeadline = document.getElementById("briefingHeadline");
+const briefingGrew = document.getElementById("briefingGrew");
+const briefingSlipped = document.getElementById("briefingSlipped");
+const briefingActions = document.getElementById("briefingActions");
+const briefingWatch = document.getElementById("briefingWatch");
+
 // numberFormat / compactFormat / percentFormat declared in i18n bootstrap above
 
 function toISODate(date) {
@@ -1264,6 +1271,31 @@ function renderBitrix(bitrix) {
   }
 }
 
+function renderBriefing(brief) {
+  if (!brief || !brief.headline) {
+    setTag(briefingState, "Brief не настроен", "muted");
+    briefingHeadline.textContent =
+      "Сводка появится после первого weekly snapshot'а с настроенным ANTHROPIC_API_KEY.";
+    briefingGrew.textContent = "—";
+    briefingSlipped.textContent = "—";
+    briefingActions.innerHTML = "";
+    briefingWatch.textContent = "—";
+    return;
+  }
+  const modelLabel = (brief.model || "Claude").replace(/^claude-/, "Claude ").replace(/-/g, " ");
+  setTag(briefingState, `${modelLabel} · ${brief.date || "—"}`, "ok");
+  briefingHeadline.textContent = brief.headline;
+  briefingGrew.textContent = brief.what_grew || "—";
+  briefingSlipped.textContent = brief.what_slipped || "—";
+  briefingActions.innerHTML = "";
+  (brief.actions || []).forEach((a) => {
+    const li = document.createElement("li");
+    li.textContent = a;
+    briefingActions.appendChild(li);
+  });
+  briefingWatch.textContent = brief.watch_next || "—";
+}
+
 function renderSourceStatus(sources) {
   sourceStatusList.innerHTML = "";
   if (!sources) return;
@@ -1273,6 +1305,7 @@ function renderSourceStatus(sources) {
     serp: "Bright Data (SERP)",
     seoProgress: "SEO Progress (Sheets)",
     bitrix: "Bitrix24 CRM",
+    briefing: "Executive Brief (LLM)",
   };
   Object.entries(sources).forEach(([key, info]) => {
     const li = document.createElement("li");
@@ -1348,6 +1381,7 @@ function renderDashboard(data) {
   renderDominanceTrend(data.dominanceHistory, data.dominance.index);
   renderSourceStatus(data.sources);
   renderBitrix(data.bitrix);
+  renderBriefing(data.briefing);
 
   const sessionsSeries = (data.series || []).map((item) => item.sessions);
   const leadsSeries = (data.series || []).map((item) => item.leads);
