@@ -141,13 +141,21 @@ body::after {
   text-overflow: ellipsis;
 }
 
-.theme-toggle {
+.topbar-toggles {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.theme-toggle,
+.lang-toggle {
   display: inline-flex;
   border: 1px solid var(--line-strong);
   background: transparent;
 }
 
-.theme-toggle button {
+.theme-toggle button,
+.lang-toggle button {
   appearance: none;
   border: none;
   background: transparent;
@@ -162,12 +170,21 @@ body::after {
   border-right: 1px solid var(--line-strong);
 }
 
-.theme-toggle button:last-child { border-right: none; }
-.theme-toggle button:hover { color: var(--paper); }
+.theme-toggle button:last-child,
+.lang-toggle button:last-child { border-right: none; }
 
-.theme-toggle button.active {
+.theme-toggle button:hover,
+.lang-toggle button:hover { color: var(--paper); }
+
+.theme-toggle button.active,
+.lang-toggle button.active {
   color: var(--ink);
   background: var(--gold);
+}
+
+@media (max-width: 720px) {
+  .topbar { flex-direction: column; align-items: flex-start; gap: 14px; }
+  .topbar-toggles { gap: 8px; }
 }
 
 .hero > div:first-child {

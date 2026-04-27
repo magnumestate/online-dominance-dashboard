@@ -19,6 +19,317 @@
   });
 })();
 
+// ─────────────────────────── i18n ───────────────────────────
+
+const messages = {
+  ru: {
+    "topbar.dark": "Dark",
+    "topbar.light": "Light",
+
+    "hero.subhead":
+      "Сводный показатель присутствия Magnum Estate в digital-канале. Объединяет органический поиск, позиции против конкурентов, конверсию и исполнение SEO-стратегии в одну величину.",
+    "hero.currentValue": "Текущее значение",
+    "hero.scaleHint": "100 = стабильность · 130+ = доминирование",
+    "hero.period": "PERIOD",
+    "hero.previous": "PREVIOUS",
+
+    "controls.from": "Период · от",
+    "controls.to": "Период · до",
+    "controls.step": "Шаг",
+    "controls.day": "День",
+    "controls.week": "Неделя",
+    "controls.month": "Месяц",
+    "controls.channel": "Канал",
+    "controls.allSources": "Все источники",
+    "controls.social": "Социальные",
+    "controls.refresh": "Обновить",
+
+    "s01.title": "Объёмы и конверсия за период",
+    "s01.desc": "Google Analytics 4 — сеансы, лиды, вовлечённость, охват уникальных пользователей.",
+    "s01.vsPrev": "vs prev",
+
+    "s02.desc": "Search Console: бренд работает, рост non-brand — главный приоритет квартала.",
+    "s02.impressions": "показов",
+    "s02.avgPos": "средняя позиция",
+
+    "s03.title": "Позиции Magnum Estate vs конкуренты",
+    "s03.desc": "Weekly snapshot через Bright Data SERP API — Google + Yandex. Лучшая позиция в строке выделена золотом.",
+    "s03.queryHeader": "Запрос",
+    "s03.snapshot": "snapshot",
+    "s03.keys": "ключей",
+    "s03.filtersOn": "фильтры",
+    "s03.empty": "Нет данных. Запустите /api/snapshot для первого сбора.",
+    "s03.filteredEmpty": "Под выбранные фильтры ключи не подходят.",
+    "s03.notLoaded": "SERP snapshot не загружен",
+
+    "s03.filter.nonBrand": "Только non-brand",
+    "s03.filter.yandex":   "Только Yandex",
+    "s03.filter.missing":  "Где мы вне ТОП-100",
+
+    "s03.engine.google": "google",
+    "s03.engine.yandex": "yandex",
+    "s03.engine.top10":  "top-10",
+    "s03.engine.best":   "best",
+    "s03.engine.sov":    "SoV in top-10",
+    "s03.engine.us":     "наш",
+    "s03.engine.them":   "конкуренты",
+
+    "movers.synth.winning.title": "Где выигрываем",
+    "movers.synth.winning.empty": "Нет ключей, где мы впереди всех",
+    "movers.synth.missing.title": "Где упускаем",
+    "movers.synth.missing.empty": "Конкуренты не доминируют ни в одном ключе",
+    "movers.synth.open.title":    "SERP открыта",
+    "movers.synth.open.empty":    "Все ключи закрыты конкурентами",
+    "movers.synth.openLabel":     "топ-10 пуст",
+    "movers.synth.vs":            "vs",
+
+    "movers.diff.up.title":    "▲ Поднялись",
+    "movers.diff.up.empty":    "Нет улучшений с прошлого snapshot'а",
+    "movers.diff.down.title":  "▼ Просели",
+    "movers.diff.down.empty":  "Нет проседаний — отлично",
+    "movers.diff.churn.title": "Новые / потеряли",
+    "movers.diff.churn.empty": "Нет смены состава топ-100",
+    "movers.diff.new":         "★ NEW",
+    "movers.diff.lost":        "✖ LOST",
+    "movers.diff.was":         "было",
+    "movers.diff.metaVs":      "vs",
+    "movers.diff.metaCompared":"keys compared",
+    "movers.diff.metaStable":  "stable",
+
+    "s03b.title": "Где конкуренты обходят нас",
+    "s03b.desc":
+      "Пересечение GSC (мы там ранжируемся) и SERP (где они выше). Эти ключи — самые легкие апсайды: уже виден сигнал релевантности, осталось обогнать одного игрока.",
+    "s03b.foundLeft":  "Найдено",
+    "s03b.foundRight": "пересечений · показаны",
+    "s03b.foundEnd":   "с самым большим разрывом",
+    "s03b.ourGsc":  "наш GSC",
+    "s03b.clicks":  "clicks",
+    "s03b.impr":    "impr",
+    "s03b.emptyNoData":
+      "Для этой секции нужны одновременно GSC и SERP snapshot. Когда оба будут доступны — здесь появятся ключи, по которым мы ранжируемся, но конкуренты выше.",
+    "s03b.emptyClean":
+      "Нет ключей, где мы ранжируемся, но конкурент впереди ≥2 позиций. Это хорошо: вы либо лидер, либо не пересекаетесь.",
+
+    "s04.title": "Источники трафика",
+    "s04.desc":  "Source / medium / channel из GA4 с разбивкой по сеансам, лидам и lead rate.",
+    "s04.sources":   "источников",
+    "s04.empty":     "Источники не найдены",
+
+    "s05.desc":      "Прогресс по контент-плану — Authoritative Content sheet.",
+    "s05.notConnected": "Sheet не подключен",
+    "s05.metaDone":  "done",
+    "s05.metaInProgress": "в работе",
+    "s05.metaTotal": "всего",
+
+    "s06.title": "Динамика за период",
+    "s06.desc":  "Трафик и лиды, тренд индекса доминирования, вовлечённость.",
+    "s06.thirtyDays": "30 дней",
+    "s06.dataMissing": "Нет данных",
+    "s06.indexNow":    "Текущий индекс",
+    "s06.historyHint": "История появится после первых snapshot'ов.",
+
+    "s07.title": "Методология и контекст",
+    "s07.desc":  "Веса индекса, отслеживаемые события, статус источников.",
+    "s07.indexExplain":
+      "Dominance Index 2.0 объединяет рост non-brand, SERP-покрытие, рост лидов, рост трафика и прогресс SEO-плана.",
+    "s07.noLeadEvents":   "Lead события не указаны",
+    "s07.noActivities":   "Активности не найдены",
+    "s07.gscDisconnected": "GSC не подключен",
+    "s07.gscTotal": "Total",
+
+    "src.notConfigured": "не настроено",
+    "src.noData":        "нет данных",
+    "src.ok":            "ок",
+    "src.snapshot":      "snapshot",
+
+    "footer.previous": "Previous",
+  },
+
+  en: {
+    "topbar.dark": "Dark",
+    "topbar.light": "Light",
+
+    "hero.subhead":
+      "Aggregate measure of Magnum Estate's digital presence. Combines organic search, positions vs competitors, conversion, and SEO execution into one number.",
+    "hero.currentValue": "Current value",
+    "hero.scaleHint": "100 = stable · 130+ = dominating",
+    "hero.period": "PERIOD",
+    "hero.previous": "PREVIOUS",
+
+    "controls.from": "Period · from",
+    "controls.to": "Period · to",
+    "controls.step": "Step",
+    "controls.day": "Day",
+    "controls.week": "Week",
+    "controls.month": "Month",
+    "controls.channel": "Channel",
+    "controls.allSources": "All sources",
+    "controls.social": "Social",
+    "controls.refresh": "Refresh",
+
+    "s01.title": "Volumes and conversion for the period",
+    "s01.desc": "Google Analytics 4 — sessions, leads, engagement, reach of unique users.",
+    "s01.vsPrev": "vs prev",
+
+    "s02.desc": "Search Console: brand is working; growing non-brand is the main quarterly priority.",
+    "s02.impressions": "impressions",
+    "s02.avgPos": "avg position",
+
+    "s03.title": "Magnum Estate positions vs competitors",
+    "s03.desc": "Weekly snapshot via Bright Data SERP API — Google + Yandex. Best position in row highlighted in gold.",
+    "s03.queryHeader": "Query",
+    "s03.snapshot": "snapshot",
+    "s03.keys": "keys",
+    "s03.filtersOn": "filters",
+    "s03.empty": "No data. Run /api/snapshot for the first collection.",
+    "s03.filteredEmpty": "No keywords match the selected filters.",
+    "s03.notLoaded": "SERP snapshot not loaded",
+
+    "s03.filter.nonBrand": "Non-brand only",
+    "s03.filter.yandex":   "Yandex only",
+    "s03.filter.missing":  "Where we're out of TOP-100",
+
+    "s03.engine.google": "google",
+    "s03.engine.yandex": "yandex",
+    "s03.engine.top10":  "top-10",
+    "s03.engine.best":   "best",
+    "s03.engine.sov":    "SoV in top-10",
+    "s03.engine.us":     "us",
+    "s03.engine.them":   "competitors",
+
+    "movers.synth.winning.title": "Where we lead",
+    "movers.synth.winning.empty": "No keywords where we beat all competitors",
+    "movers.synth.missing.title": "Where we miss",
+    "movers.synth.missing.empty": "Competitors don't dominate any tracked keyword",
+    "movers.synth.open.title":    "SERP is open",
+    "movers.synth.open.empty":    "All keywords claimed by competitors",
+    "movers.synth.openLabel":     "top-10 empty",
+    "movers.synth.vs":            "vs",
+
+    "movers.diff.up.title":    "▲ Risers",
+    "movers.diff.up.empty":    "No improvements since last snapshot",
+    "movers.diff.down.title":  "▼ Fallers",
+    "movers.diff.down.empty":  "No drops — clean week",
+    "movers.diff.churn.title": "New / Lost",
+    "movers.diff.churn.empty": "No turnover in top-100",
+    "movers.diff.new":         "★ NEW",
+    "movers.diff.lost":        "✖ LOST",
+    "movers.diff.was":         "was",
+    "movers.diff.metaVs":      "vs",
+    "movers.diff.metaCompared":"keys compared",
+    "movers.diff.metaStable":  "stable",
+
+    "s03b.title": "Where competitors outrank us",
+    "s03b.desc":
+      "Intersection of GSC (we already rank there) and SERP (where they sit higher). These keywords are the easiest upgrades — relevance signal exists, only one player to overtake.",
+    "s03b.foundLeft":  "Found",
+    "s03b.foundRight": "intersections · showing",
+    "s03b.foundEnd":   "with the largest gap",
+    "s03b.ourGsc":  "our GSC",
+    "s03b.clicks":  "clicks",
+    "s03b.impr":    "impr",
+    "s03b.emptyNoData":
+      "This section needs both GSC and SERP snapshots. Once both are available, you'll see the keywords where you rank but competitors rank higher.",
+    "s03b.emptyClean":
+      "No keywords where we rank but a competitor leads by ≥2 positions. That's good: either you're the leader, or there's no overlap.",
+
+    "s04.title": "Traffic sources",
+    "s04.desc":  "Source / medium / channel from GA4 broken down by sessions, leads, and lead rate.",
+    "s04.sources":   "sources",
+    "s04.empty":     "No sources found",
+
+    "s05.desc":      "Content plan progress — Authoritative Content sheet.",
+    "s05.notConnected": "Sheet not connected",
+    "s05.metaDone":  "done",
+    "s05.metaInProgress": "in progress",
+    "s05.metaTotal": "total",
+
+    "s06.title": "Time series for the period",
+    "s06.desc":  "Traffic and leads, dominance index trend, engagement.",
+    "s06.thirtyDays": "30 days",
+    "s06.dataMissing": "No data",
+    "s06.indexNow":    "Current index",
+    "s06.historyHint": "History will appear after the first snapshots.",
+
+    "s07.title": "Methodology and context",
+    "s07.desc":  "Index weights, tracked events, source status.",
+    "s07.indexExplain":
+      "Dominance Index 2.0 combines non-brand growth, SERP coverage, lead growth, traffic growth, and SEO plan progress.",
+    "s07.noLeadEvents":   "No lead events specified",
+    "s07.noActivities":   "No activity events found",
+    "s07.gscDisconnected": "GSC not connected",
+    "s07.gscTotal": "Total",
+
+    "src.notConfigured": "not configured",
+    "src.noData":        "no data",
+    "src.ok":            "ok",
+    "src.snapshot":      "snapshot",
+
+    "footer.previous": "Previous",
+  },
+};
+
+let currentLang = "ru";
+function t(key) {
+  return messages[currentLang]?.[key] ?? messages.ru[key] ?? key;
+}
+
+function localeFor(lang) {
+  return lang === "en" ? "en-US" : "ru-RU";
+}
+
+// Module-level formatters — recreated when language changes
+let numberFormat = new Intl.NumberFormat(localeFor("ru"));
+let compactFormat = new Intl.NumberFormat(localeFor("ru"), { notation: "compact", maximumFractionDigits: 1 });
+let percentFormat = new Intl.NumberFormat(localeFor("ru"), { style: "percent", maximumFractionDigits: 1 });
+function refreshFormatters() {
+  numberFormat = new Intl.NumberFormat(localeFor(currentLang));
+  compactFormat = new Intl.NumberFormat(localeFor(currentLang), { notation: "compact", maximumFractionDigits: 1 });
+  percentFormat = new Intl.NumberFormat(localeFor(currentLang), { style: "percent", maximumFractionDigits: 1 });
+}
+
+function applyStaticI18n() {
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const value = t(el.dataset.i18n);
+    if (el.tagName === "INPUT" && el.type !== "submit") {
+      el.placeholder = value;
+    } else {
+      el.textContent = value;
+    }
+  });
+}
+
+function setLanguage(lang) {
+  if (lang !== "ru" && lang !== "en") lang = "ru";
+  currentLang = lang;
+  document.documentElement.setAttribute("lang", lang);
+  try { localStorage.setItem("language", lang); } catch {}
+  refreshFormatters();
+  applyStaticI18n();
+  document.querySelectorAll(".lang-toggle button").forEach((b) => {
+    const active = b.dataset.lang === lang;
+    b.setAttribute("aria-pressed", active ? "true" : "false");
+    b.classList.toggle("active", active);
+  });
+  if (typeof lastData !== "undefined" && lastData) renderDashboard(lastData);
+}
+
+(function initLanguage() {
+  const stored = localStorage.getItem("language");
+  currentLang = stored === "ru" || stored === "en" ? stored : "ru";
+  refreshFormatters();
+  document.documentElement.setAttribute("lang", currentLang);
+  document.addEventListener("DOMContentLoaded", () => {
+    applyStaticI18n();
+    document.querySelectorAll(".lang-toggle button").forEach((b) => {
+      const active = b.dataset.lang === currentLang;
+      b.setAttribute("aria-pressed", active ? "true" : "false");
+      b.classList.toggle("active", active);
+      b.addEventListener("click", () => setLanguage(b.dataset.lang));
+    });
+  });
+})();
+
 const startInput = document.getElementById("startDate");
 const endInput = document.getElementById("endDate");
 const granularitySelect = document.getElementById("granularity");
@@ -77,12 +388,7 @@ const clusterGrid = document.getElementById("clusterGrid");
 const diMetaEl = document.getElementById("diMeta");
 const sourceStatusList = document.getElementById("sourceStatusList");
 
-const numberFormat = new Intl.NumberFormat("ru-RU");
-const compactFormat = new Intl.NumberFormat("ru-RU", { notation: "compact", maximumFractionDigits: 1 });
-const percentFormat = new Intl.NumberFormat("ru-RU", {
-  style: "percent",
-  maximumFractionDigits: 1,
-});
+// numberFormat / compactFormat / percentFormat declared in i18n bootstrap above
 
 function toISODate(date) {
   const year = date.getFullYear();
@@ -210,13 +516,13 @@ function renderList(target, list, emptyText) {
 function renderSourceTable(list) {
   sourceTableBody.innerHTML = "";
   const rows = list || [];
-  sourceCount.textContent = `${numberFormat.format(rows.length)} источников`;
+  sourceCount.textContent = `${numberFormat.format(rows.length)} ${t("s04.sources")}`;
 
   if (rows.length === 0) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
     td.colSpan = 8;
-    td.textContent = "Источники не найдены";
+    td.textContent = t("s04.empty");
     td.className = "empty-cell";
     tr.appendChild(td);
     sourceTableBody.appendChild(tr);
@@ -248,7 +554,7 @@ function renderSourceTable(list) {
 function renderLineChart(container, series) {
   container.innerHTML = "";
   if (!series || series.length === 0 || series.every((s) => !s.values?.length)) {
-    container.textContent = "Нет данных";
+    container.textContent = t("s06.dataMissing");
     return;
   }
 
@@ -298,22 +604,22 @@ function renderLineChart(container, series) {
 
 function renderGsc(gsc) {
   if (!gsc) {
-    setTag(gscStateEl, "GSC не подключен", "warn");
+    setTag(gscStateEl, t("s07.gscDisconnected"), "warn");
     [brandClicksEl, nonBrandClicksEl, gscCtrEl].forEach((el) => (el.textContent = "—"));
-    brandImpressionsEl.textContent = "— показов";
-    nonBrandImpressionsEl.textContent = "— показов";
-    gscPositionEl.textContent = "средняя позиция —";
+    brandImpressionsEl.textContent = `— ${t("s02.impressions")}`;
+    nonBrandImpressionsEl.textContent = `— ${t("s02.impressions")}`;
+    gscPositionEl.textContent = `${t("s02.avgPos")} —`;
     return;
   }
 
-  setTag(gscStateEl, `Total: ${numberFormat.format(gsc.totals.clicks)} clicks`, "ok");
+  setTag(gscStateEl, `${t("s07.gscTotal")}: ${numberFormat.format(gsc.totals.clicks)} clicks`, "ok");
 
   brandClicksEl.textContent = numberFormat.format(gsc.brandSplit.brand.clicks);
-  brandImpressionsEl.textContent = `${compactFormat.format(gsc.brandSplit.brand.impressions)} показов`;
+  brandImpressionsEl.textContent = `${compactFormat.format(gsc.brandSplit.brand.impressions)} ${t("s02.impressions")}`;
   nonBrandClicksEl.textContent = numberFormat.format(gsc.brandSplit.nonBrand.clicks);
-  nonBrandImpressionsEl.textContent = `${compactFormat.format(gsc.brandSplit.nonBrand.impressions)} показов`;
+  nonBrandImpressionsEl.textContent = `${compactFormat.format(gsc.brandSplit.nonBrand.impressions)} ${t("s02.impressions")}`;
   gscCtrEl.textContent = percentFormat.format(gsc.totals.ctr);
-  gscPositionEl.textContent = `средняя позиция ${gsc.totals.position.toFixed(1)}`;
+  gscPositionEl.textContent = `${t("s02.avgPos")} ${gsc.totals.position.toFixed(1)}`;
 }
 
 function renderEngineSummary(serp) {
@@ -356,8 +662,8 @@ function renderEngineSummary(serp) {
     tile.className = `engine-tile engine-${engine}`;
     tile.innerHTML = `
       <span class="engine-tile-label">${engine}</span>
-      <span class="engine-tile-stat"><b>${b.ourTop10}</b>/${b.total} <em>top-10</em></span>
-      <span class="engine-tile-stat best">best <b>${b.ourBest != null ? "#" + b.ourBest : "—"}</b></span>
+      <span class="engine-tile-stat"><b>${b.ourTop10}</b>/${b.total} <em>${t("s03.engine.top10")}</em></span>
+      <span class="engine-tile-stat best">${t("s03.engine.best")} <b>${b.ourBest != null ? "#" + b.ourBest : "—"}</b></span>
     `;
     serpEngineSummary.appendChild(tile);
   }
@@ -365,9 +671,9 @@ function renderEngineSummary(serp) {
   const overall = document.createElement("div");
   overall.className = "engine-tile coverage";
   overall.innerHTML = `
-    <span class="engine-tile-label">SoV in top-10</span>
+    <span class="engine-tile-label">${t("s03.engine.sov")}</span>
     <span class="engine-tile-stat coverage-value"><b>${sharePct}%</b></span>
-    <span class="engine-tile-stat"><em>наш ${ourTop10} · конкуренты ${theirTop10}</em></span>
+    <span class="engine-tile-stat"><em>${t("s03.engine.us")} ${ourTop10} · ${t("s03.engine.them")} ${theirTop10}</em></span>
   `;
   serpEngineSummary.appendChild(overall);
 }
@@ -396,19 +702,19 @@ function renderTrueMovers(diff) {
   const since = diff.previousDate || diff.sinceDate || "—";
   const meta = `
     <div class="movers-meta">
-      <span>vs <b>${since}</b></span>
+      <span>${t("movers.diff.metaVs")} <b>${since}</b></span>
       <span>·</span>
-      <span>${diff.totalCompared} keys compared</span>
+      <span>${diff.totalCompared} ${t("movers.diff.metaCompared")}</span>
       <span>·</span>
-      <span>${diff.stableCount} stable</span>
+      <span>${diff.stableCount} ${t("movers.diff.metaStable")}</span>
     </div>
   `;
 
   const risersHTML = moverCard(
     "winning",
-    "▲ Поднялись",
+    t("movers.diff.up.title"),
     diff.risers,
-    "Нет улучшений с прошлого snapshot'а",
+    t("movers.diff.up.empty"),
     (it) => `
       <li>
         <span class="mover-kw">${it.keyword}${moverEngineLabel(it.engine)}</span>
@@ -422,9 +728,9 @@ function renderTrueMovers(diff) {
 
   const fallersHTML = moverCard(
     "missing",
-    "▼ Просели",
+    t("movers.diff.down.title"),
     diff.fallers,
-    "Нет проседаний — отлично",
+    t("movers.diff.down.empty"),
     (it) => `
       <li>
         <span class="mover-kw">${it.keyword}${moverEngineLabel(it.engine)}</span>
@@ -443,17 +749,17 @@ function renderTrueMovers(diff) {
 
   const churnHTML = moverCard(
     "open",
-    "Новые / потеряли",
+    t("movers.diff.churn.title"),
     churn,
-    "Нет смены состава топ-100",
+    t("movers.diff.churn.empty"),
     (it) => `
       <li>
         <span class="mover-kw">${it.keyword}${moverEngineLabel(it.engine)}</span>
         <span class="mover-stat">
           ${
             it.kind === "new"
-              ? `<b class="delta-up">★ NEW</b><em>${posCell(it.curPos)}</em>`
-              : `<b class="delta-down">✖ LOST</b><em>was ${posCell(it.prevPos)}</em>`
+              ? `<b class="delta-up">${t("movers.diff.new")}</b><em>${posCell(it.curPos)}</em>`
+              : `<b class="delta-down">${t("movers.diff.lost")}</b><em>${t("movers.diff.was")} ${posCell(it.prevPos)}</em>`
           }
         </span>
       </li>
@@ -517,22 +823,22 @@ function renderSyntheticMovers(serp) {
 
   const winHTML = moverCard(
     "winning",
-    "Где выигрываем",
+    t("movers.synth.winning.title"),
     winners,
-    "Нет ключей, где мы впереди всех",
+    t("movers.synth.winning.empty"),
     (it) => `
       <li>
         <span class="mover-kw">${it.keyword}${moverEngineLabel(it.engine)}</span>
-        <span class="mover-stat"><b>#${it.ourPos}</b>${it.competitorBest === Infinity ? "" : ` <em>vs #${it.competitorBest}</em>`}</span>
+        <span class="mover-stat"><b>#${it.ourPos}</b>${it.competitorBest === Infinity ? "" : ` <em>${t("movers.synth.vs")} #${it.competitorBest}</em>`}</span>
       </li>
     `
   );
 
   const oppHTML = moverCard(
     "missing",
-    "Где упускаем",
+    t("movers.synth.missing.title"),
     opportunities,
-    "Конкуренты не доминируют ни в одном ключе",
+    t("movers.synth.missing.empty"),
     (it) => `
       <li>
         <span class="mover-kw">${it.keyword}${moverEngineLabel(it.engine)}</span>
@@ -543,13 +849,13 @@ function renderSyntheticMovers(serp) {
 
   const openHTML = moverCard(
     "open",
-    "SERP открыта",
+    t("movers.synth.open.title"),
     open,
-    "Все ключи закрыты конкурентами",
+    t("movers.synth.open.empty"),
     (it) => `
       <li>
         <span class="mover-kw">${it.keyword}${moverEngineLabel(it.engine)}</span>
-        <span class="mover-stat"><em>топ-10 пуст</em></span>
+        <span class="mover-stat"><em>${t("movers.synth.openLabel")}</em></span>
       </li>
     `
   );
@@ -612,9 +918,9 @@ function applySerpFilters(rows, ourDomain) {
 function renderSerpFilters() {
   if (!serpFiltersEl) return;
   const buttons = [
-    { key: "nonBrand", label: "Только non-brand" },
-    { key: "yandex",   label: "Только Yandex" },
-    { key: "missing",  label: "Где мы вне ТОП-100" },
+    { key: "nonBrand", label: t("s03.filter.nonBrand") },
+    { key: "yandex",   label: t("s03.filter.yandex") },
+    { key: "missing",  label: t("s03.filter.missing") },
   ];
   serpFiltersEl.innerHTML = buttons
     .map(
@@ -645,10 +951,10 @@ function renderSerp(serp, diff) {
   renderSerpFilters();
 
   if (!serp || !serp.keywords || serp.keywords.length === 0) {
-    setTag(serpStateEl, "SERP snapshot не загружен", "warn");
+    setTag(serpStateEl, t("s03.notLoaded"), "warn");
     const tr = document.createElement("tr");
     const td = document.createElement("td");
-    td.textContent = "Нет данных. Запустите /api/snapshot для первого сбора.";
+    td.textContent = t("s03.empty");
     td.className = "empty-cell";
     tr.appendChild(td);
     serpTableBody.appendChild(tr);
@@ -665,11 +971,11 @@ function renderSerp(serp, diff) {
     .map(([k]) => k);
 
   const stateText = activeFilters.length
-    ? `${filtered.length}/${serp.keywords.length} · snapshot ${serp.snapshotDate || "—"} · фильтры: ${activeFilters.length}`
-    : `${serp.keywords.length} ключей · snapshot ${serp.snapshotDate || "—"}`;
+    ? `${filtered.length}/${serp.keywords.length} · ${t("s03.snapshot")} ${serp.snapshotDate || "—"} · ${t("s03.filtersOn")}: ${activeFilters.length}`
+    : `${serp.keywords.length} ${t("s03.keys")} · ${t("s03.snapshot")} ${serp.snapshotDate || "—"}`;
   setTag(serpStateEl, stateText, "ok");
 
-  const headers = ["Запрос", ...allDomains.map((c) => c.name)];
+  const headers = [t("s03.queryHeader"), ...allDomains.map((c) => c.name)];
   headers.forEach((label, idx) => {
     const th = document.createElement("th");
     th.textContent = label;
@@ -680,7 +986,7 @@ function renderSerp(serp, diff) {
   if (filtered.length === 0) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
-    td.textContent = "Под выбранные фильтры ключи не подходят.";
+    td.textContent = t("s03.filteredEmpty");
     td.className = "empty-cell";
     td.colSpan = headers.length;
     tr.appendChild(td);
@@ -725,11 +1031,7 @@ function renderIntersection(gsc, serp) {
   if (!intersectionEl) return;
   intersectionEl.innerHTML = "";
   if (!gsc?.topQueries || !serp?.keywords || !serp?.competitors) {
-    intersectionEl.innerHTML = `
-      <p class="intersection-empty">
-        Для этой секции нужны одновременно GSC и SERP snapshot. Когда оба будут доступны — здесь появятся ключи, по которым мы ранжируемся, но конкуренты выше.
-      </p>
-    `;
+    intersectionEl.innerHTML = `<p class="intersection-empty">${t("s03b.emptyNoData")}</p>`;
     return;
   }
 
@@ -778,11 +1080,7 @@ function renderIntersection(gsc, serp) {
   const top = outranked.slice(0, 8);
 
   if (top.length === 0) {
-    intersectionEl.innerHTML = `
-      <p class="intersection-empty">
-        Нет ключей, где мы ранжируемся, но конкурент впереди ≥2 позиций. Это хорошо: вы либо лидер, либо не пересекаетесь.
-      </p>
-    `;
+    intersectionEl.innerHTML = `<p class="intersection-empty">${t("s03b.emptyClean")}</p>`;
     return;
   }
 
@@ -793,8 +1091,8 @@ function renderIntersection(gsc, serp) {
           <span class="ix-rank">${String(i + 1).padStart(2, "0")}</span>
           <span class="ix-kw">${it.keyword}${moverEngineLabel(it.engine)}</span>
           <span class="ix-our">
-            <em>наш GSC</em> <b>#${it.ourGscRounded}</b>
-            <small>${numberFormat.format(it.ourClicks)} clicks · ${compactFormat.format(it.ourImpr)} impr</small>
+            <em>${t("s03b.ourGsc")}</em> <b>#${it.ourGscRounded}</b>
+            <small>${numberFormat.format(it.ourClicks)} ${t("s03b.clicks")} · ${compactFormat.format(it.ourImpr)} ${t("s03b.impr")}</small>
           </span>
           <span class="ix-arrow">→</span>
           <span class="ix-leader">
@@ -808,7 +1106,7 @@ function renderIntersection(gsc, serp) {
 
   intersectionEl.innerHTML = `
     <div class="intersection-meta">
-      Найдено <b>${outranked.length}</b> пересечений · показаны ${top.length} с самым большим разрывом
+      ${t("s03b.foundLeft")} <b>${outranked.length}</b> ${t("s03b.foundRight")} ${top.length} ${t("s03b.foundEnd")}
     </div>
     <ol class="intersection-list">${itemsHTML}</ol>
   `;
@@ -817,7 +1115,7 @@ function renderIntersection(gsc, serp) {
 function renderSeoProgress(seo) {
   clusterGrid.innerHTML = "";
   if (!seo) {
-    setTag(seoStateEl, "Sheet не подключен", "warn");
+    setTag(seoStateEl, t("s05.notConnected"), "warn");
     seoPctEl.textContent = "—";
     seoMetaEl.textContent = "—";
     seoFillEl.style.width = "0%";
@@ -827,7 +1125,7 @@ function renderSeoProgress(seo) {
   setTag(seoStateEl, `snapshot ${seo.snapshotDate || "—"}`, "ok");
   seoPctEl.textContent = percentFormat.format(seo.pct);
   seoFillEl.style.width = `${Math.round(seo.pct * 100)}%`;
-  seoMetaEl.textContent = `${seo.done} done · ${seo.notDone} в работе · всего ${seo.total}`;
+  seoMetaEl.textContent = `${seo.done} ${t("s05.metaDone")} · ${seo.notDone} ${t("s05.metaInProgress")} · ${t("s05.metaTotal")} ${seo.total}`;
 
   (seo.clusters || []).forEach((cluster) => {
     const card = document.createElement("div");
@@ -846,7 +1144,9 @@ function renderSeoProgress(seo) {
 
 function renderDominanceTrend(history, currentIndex) {
   if (!history || history.length === 0) {
-    diTrendChart.textContent = currentIndex != null ? `Текущий индекс: ${currentIndex}. История появится после первых snapshot'ов.` : "Нет данных";
+    diTrendChart.textContent = currentIndex != null
+      ? `${t("s06.indexNow")}: ${currentIndex}. ${t("s06.historyHint")}`
+      : t("s06.dataMissing");
     diMetaEl.textContent = "—";
     return;
   }
@@ -873,13 +1173,13 @@ function renderSourceStatus(sources) {
     name.textContent = labels[key] || key;
     const status = document.createElement("span");
     if (!info.configured) {
-      status.textContent = "не настроено";
+      status.textContent = t("src.notConfigured");
       status.className = "miss";
     } else if (info.ok === false || (info.cached === false && info.configured)) {
-      status.textContent = info.error || "нет данных";
+      status.textContent = info.error || t("src.noData");
       status.className = "miss";
     } else {
-      status.textContent = info.date ? `snapshot ${info.date}` : "ок";
+      status.textContent = info.date ? `${t("src.snapshot")} ${info.date}` : t("src.ok");
       status.className = "ok";
     }
     li.appendChild(name);
@@ -922,17 +1222,17 @@ function renderDashboard(data) {
 
   const periodDays = periodLength(data.meta.startDate, data.meta.endDate);
   if (heroMetaPeriod) {
-    heroMetaPeriod.textContent = `Period · ${compactDate(data.meta.startDate)} → ${compactDate(data.meta.endDate)}${periodDays ? ` · ${periodDays}D` : ""}`;
+    heroMetaPeriod.textContent = `${t("hero.period")} · ${compactDate(data.meta.startDate)} → ${compactDate(data.meta.endDate)}${periodDays ? ` · ${periodDays}D` : ""}`;
   }
   if (heroMetaPrev) {
-    heroMetaPrev.textContent = `Previous · ${compactDate(data.meta.previousStartDate)} → ${compactDate(data.meta.previousEndDate)}`;
+    heroMetaPrev.textContent = `${t("hero.previous")} · ${compactDate(data.meta.previousStartDate)} → ${compactDate(data.meta.previousEndDate)}`;
   }
 
   periodLabel.textContent = `${compactDate(data.meta.startDate)} → ${compactDate(data.meta.endDate)}`;
-  previousPeriod.textContent = `Previous · ${compactDate(data.meta.previousStartDate)} → ${compactDate(data.meta.previousEndDate)}`;
+  previousPeriod.textContent = `${t("footer.previous")} · ${compactDate(data.meta.previousStartDate)} → ${compactDate(data.meta.previousEndDate)}`;
 
-  renderList(leadEventsList, data.meta.leadEvents, "Lead события не указаны");
-  renderList(activityList, data.activities, "Активности не найдены");
+  renderList(leadEventsList, data.meta.leadEvents, t("s07.noLeadEvents"));
+  renderList(activityList, data.activities, t("s07.noActivities"));
   renderSourceTable(data.trafficSources);
   renderGsc(data.gsc);
   renderSerp(data.serp, data.serpDiff);
@@ -946,11 +1246,11 @@ function renderDashboard(data) {
   const engagementSeries = (data.series || []).map((item) => Math.round(item.engagementRate * 100));
 
   renderLineChart(trafficChart, [
-    { name: "Сеансы", values: sessionsSeries, color: "#c9a96e" },
-    { name: "Лиды", values: leadsSeries, color: "#d4685a" },
+    { name: "Sessions", values: sessionsSeries, color: "#c9a96e" },
+    { name: "Leads", values: leadsSeries, color: "#d4685a" },
   ]);
   renderLineChart(engagementChart, [
-    { name: "Вовлеченность", values: engagementSeries, color: "#84b685" },
+    { name: "Engagement", values: engagementSeries, color: "#84b685" },
   ]);
 }
 
@@ -964,7 +1264,7 @@ async function loadDashboard() {
 
   const response = await fetch(`/api/dashboard?${params.toString()}`);
   if (!response.ok) {
-    trafficChart.textContent = "Ошибка загрузки данных";
+    trafficChart.textContent = currentLang === "en" ? "Failed to load data" : "Ошибка загрузки данных";
     return;
   }
   const data = await response.json();
