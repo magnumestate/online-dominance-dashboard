@@ -388,6 +388,21 @@ const clusterGrid = document.getElementById("clusterGrid");
 const diMetaEl = document.getElementById("diMeta");
 const sourceStatusList = document.getElementById("sourceStatusList");
 
+const bitrixState = document.getElementById("bitrixState");
+const bitrixLeadsTotal = document.getElementById("bitrixLeadsTotal");
+const bitrixLeadsDelta = document.getElementById("bitrixLeadsDelta");
+const bitrixLeadsCaption = document.getElementById("bitrixLeadsCaption");
+const bitrixQualified = document.getElementById("bitrixQualified");
+const bitrixQualifiedDelta = document.getElementById("bitrixQualifiedDelta");
+const bitrixJunkRate = document.getElementById("bitrixJunkRate");
+const bitrixDealsOpen = document.getElementById("bitrixDealsOpen");
+const bitrixDealsDelta = document.getElementById("bitrixDealsDelta");
+const bitrixDealsBreakdown = document.getElementById("bitrixDealsBreakdown");
+const bitrixPipelineValue = document.getElementById("bitrixPipelineValue");
+const bitrixPipelineDelta = document.getElementById("bitrixPipelineDelta");
+const bitrixWonValue = document.getElementById("bitrixWonValue");
+const bitrixSourcesBody = document.getElementById("bitrixSourcesBody");
+
 // numberFormat / compactFormat / percentFormat declared in i18n bootstrap above
 
 function toISODate(date) {
@@ -1158,6 +1173,97 @@ function renderDominanceTrend(history, currentIndex) {
   renderLineChart(diTrendChart, [{ name: "Index", values, color: "#e1c282" }]);
 }
 
+function formatCompactCurrency(n) {
+  if (n == null || !Number.isFinite(n)) return "—";
+  if (Math.abs(n) >= 1e9) return (n / 1e9).toFixed(2).replace(/\.?0+$/, "") + " B";
+  if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(2).replace(/\.?0+$/, "") + " M";
+  if (Math.abs(n) >= 1e3) return (n / 1e3).toFixed(1).replace(/\.?0+$/, "") + " K";
+  return numberFormat.format(n);
+}
+
+function renderBitrix(bitrix) {
+  if (!bitrix?.leads?.current) {
+    setTag(bitrixState, "Bitrix не подключен", "muted");
+    [
+      bitrixLeadsTotal, bitrixQualified, bitrixDealsOpen, bitrixPipelineValue,
+    ].forEach((el) => (el.textContent = "—"));
+    [bitrixLeadsDelta, bitrixQualifiedDelta, bitrixDealsDelta, bitrixPipelineDelta]
+      .forEach((el) => renderDelta(el, null));
+    bitrixSourcesBody.innerHTML = "";
+    bitrixJunkRate.textContent = "Junk rate —";
+    bitrixDealsBreakdown.textContent = "Won — · Lost —";
+    bitrixWonValue.textContent = "Won —";
+    bitrixLeadsCaption.textContent = "Всего за период";
+    return;
+  }
+
+  const cur = bitrix.leads.current;
+  const prev = bitrix.leads.previous || {};
+  const dCur = bitrix.deals.current;
+  const dPrev = bitrix.deals.previous || {};
+
+  setTag(bitrixState, `${cur.total} leads · ${dCur.total} deals`, "ok");
+
+  bitrixLeadsTotal.textContent = numberFormat.format(cur.total);
+  renderDelta(bitrixLeadsDelta, computeDelta(cur.total, prev.total));
+  bitrixLeadsCaption.textContent = "Всего за период";
+
+  bitrixQualified.textContent = numberFormat.format(cur.qualified || 0);
+  renderDelta(bitrixQualifiedDelta, computeDelta(cur.qualified, prev.qualified));
+  bitrixJunkRate.textContent = `Junk rate ${percentFormat.format(cur.junkRate || 0)}`;
+
+  bitrixDealsOpen.textContent = numberFormat.format(dCur.in_progress || 0);
+  renderDelta(bitrixDealsDelta, computeDelta(dCur.in_progress, dPrev.in_progress));
+  bitrixDealsBreakdown.textContent = `Won ${dCur.won || 0} · Lost ${dCur.lost || 0}`;
+
+  bitrixPipelineValue.textContent = formatCompactCurrency(dCur.pipeline_value);
+  renderDelta(bitrixPipelineDelta, computeDelta(dCur.pipeline_value, dPrev.pipeline_value));
+  bitrixWonValue.textContent = `Won ${formatCompactCurrency(dCur.won_value)}`;
+
+  // Top sources table — match current sources against previous to show delta
+  const prevByName = new Map((prev.sources || []).map((s) => [s.source, s.count]));
+  bitrixSourcesBody.innerHTML = "";
+  if (!cur.sources?.length) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 4;
+    td.textContent = "Источники не найдены";
+    td.className = "empty-cell";
+    tr.appendChild(td);
+    bitrixSourcesBody.appendChild(tr);
+  } else {
+    cur.sources.slice(0, 10).forEach((s) => {
+      const tr = document.createElement("tr");
+      const prevCount = prevByName.get(s.source) || 0;
+      const tdName = document.createElement("td");
+      tdName.textContent = s.source;
+      const tdCur = document.createElement("td");
+      tdCur.className = "numeric-cell";
+      tdCur.textContent = numberFormat.format(s.count);
+      const tdPrev = document.createElement("td");
+      tdPrev.className = "numeric-cell";
+      tdPrev.textContent = prevCount ? numberFormat.format(prevCount) : "—";
+      const tdDelta = document.createElement("td");
+      tdDelta.className = "numeric-cell";
+      const delta = computeDelta(s.count, prevCount);
+      if (delta == null) {
+        tdDelta.textContent = "—";
+        tdDelta.style.color = "var(--paper-faint)";
+      } else {
+        const pct = Math.abs(delta * 100);
+        const sign = delta > 0 ? "▲ " : delta < 0 ? "▼ " : "";
+        tdDelta.textContent = sign + (pct >= 1000 ? ">999" : pct.toFixed(1)) + "%";
+        tdDelta.style.color = delta > 0 ? "var(--positive)" : delta < 0 ? "var(--negative)" : "var(--paper-faint)";
+      }
+      tr.appendChild(tdName);
+      tr.appendChild(tdCur);
+      tr.appendChild(tdPrev);
+      tr.appendChild(tdDelta);
+      bitrixSourcesBody.appendChild(tr);
+    });
+  }
+}
+
 function renderSourceStatus(sources) {
   sourceStatusList.innerHTML = "";
   if (!sources) return;
@@ -1166,6 +1272,7 @@ function renderSourceStatus(sources) {
     gsc: "Search Console",
     serp: "Bright Data (SERP)",
     seoProgress: "SEO Progress (Sheets)",
+    bitrix: "Bitrix24 CRM",
   };
   Object.entries(sources).forEach(([key, info]) => {
     const li = document.createElement("li");
@@ -1240,6 +1347,7 @@ function renderDashboard(data) {
   renderSeoProgress(data.seoProgress);
   renderDominanceTrend(data.dominanceHistory, data.dominance.index);
   renderSourceStatus(data.sources);
+  renderBitrix(data.bitrix);
 
   const sessionsSeries = (data.series || []).map((item) => item.sessions);
   const leadsSeries = (data.series || []).map((item) => item.leads);
