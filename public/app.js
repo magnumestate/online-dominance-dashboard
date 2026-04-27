@@ -143,6 +143,48 @@ const messages = {
     "src.snapshot":      "snapshot",
 
     "footer.previous": "Previous",
+
+    // AI Visibility (section 06)
+    "aiVis.title": "Бренд в ответах LLM и Google AI Overviews",
+    "aiVis.desc":  "Probe: ~30 prompt-семей × включённые движки (Claude, ChatGPT, Perplexity, YandexGPT) — еженедельный замер Share of Voice, sentiment и цитирования. AI Overviews: реальные блоки Google AI на отслеживаемых ключах.",
+    "aiVis.opportunities": "Топ возможностей (где конкуренты упомянуты, мы — нет)",
+    "aiVis.notConfigured": "AI probe не подключён (нет API-ключей)",
+    "aiVis.noData":        "нет данных за эту неделю",
+    "aiVis.responsesShort": "ответов",
+    "aiVis.allResponses":  "всего ответов",
+    "aiVis.brandMentionsTotal": "brand mentions из",
+    "aiVis.brandMentionsTotal2": "ответов",
+    "aiVis.ofMentions":    "от упоминаний",
+    "aiVis.classified":    "ответов классифицировано Haiku 4.5",
+    "aiVis.sentimentNotRun": "Sentiment ещё не запускался",
+    "aiVis.classifierMissing": "Classifier не настроен (нет ANTHROPIC_API_KEY)",
+    "aiVis.scoreLabel":    "score",
+    "aiVis.noWeek":        "Нет AI-данных за эту неделю",
+    "aiVis.cards.wins":    "Где Magnum цитируют",
+    "aiVis.cards.threats": "Угрозы (конкуренты цитируются, мы — нет)",
+    "aiVis.cards.blue":    "Blue ocean (AI Overview есть, никто не цитирован)",
+    "aiVis.opp.empty":     "Нет данных. Запустите /api/snapshot после настройки ANTHROPIC_API_KEY (и при желании OPENAI/PERPLEXITY/YANDEX).",
+    "aiVis.opp.cleanRu":   "Конкуренты пока не доминируют в AI Overviews.",
+    "aiVis.opp.compInAio": "конкуренты в AI Overview",
+
+    // Sales Pipeline / Bitrix (section 08)
+    "sales.title": "Лиды и сделки в Bitrix24",
+    "sales.desc":  "Реальные CRM-данные: лиды по статусу и источнику, активные сделки и стоимость pipeline.",
+    "sales.totalForPeriod": "Всего за период",
+    "sales.topLeadsTitle": "Top lead sources",
+    "sales.topLeadsDesc":  "Откуда пришли лиды за выбранный период.",
+    "sales.notConnected":  "Bitrix не подключен",
+    "sales.empty":         "Источники не найдены",
+
+    // Executive Brief (section 09)
+    "brief.title": "Еженедельная сводка",
+    "brief.desc":  "Автоматический нарратив, собранный из всех источников выше. Генерируется раз в неделю.",
+    "brief.placeholder": "Сводка появится после первого weekly snapshot'а с настроенным ANTHROPIC_API_KEY.",
+    "brief.grew": "Что выросло",
+    "brief.slipped": "Где проседаем",
+    "brief.actions": "Действия на следующую неделю",
+    "brief.watch": "Следить дальше",
+    "brief.notConfigured": "Brief не настроен",
   },
 
   en: {
@@ -266,6 +308,48 @@ const messages = {
     "src.snapshot":      "snapshot",
 
     "footer.previous": "Previous",
+
+    // AI Visibility (section 06)
+    "aiVis.title": "Brand in LLM responses and Google AI Overviews",
+    "aiVis.desc":  "Probe: ~30 prompt families × enabled engines (Claude, ChatGPT, Perplexity, YandexGPT) — weekly Share of Voice, sentiment and citation tracking. AI Overviews: real Google AI blocks on tracked keywords.",
+    "aiVis.opportunities": "Top opportunities (competitors mentioned, we are not)",
+    "aiVis.notConfigured": "AI probe not connected (no API keys)",
+    "aiVis.noData":        "no data this week",
+    "aiVis.responsesShort": "responses",
+    "aiVis.allResponses":  "total responses",
+    "aiVis.brandMentionsTotal": "brand mentions out of",
+    "aiVis.brandMentionsTotal2": "responses",
+    "aiVis.ofMentions":    "of mentions",
+    "aiVis.classified":    "responses classified by Haiku 4.5",
+    "aiVis.sentimentNotRun": "Sentiment hasn't run yet",
+    "aiVis.classifierMissing": "Classifier not configured (no ANTHROPIC_API_KEY)",
+    "aiVis.scoreLabel":    "score",
+    "aiVis.noWeek":        "No AI data for this week",
+    "aiVis.cards.wins":    "Where Magnum is cited",
+    "aiVis.cards.threats": "Threats (competitors cited, we're not)",
+    "aiVis.cards.blue":    "Blue ocean (AI Overview present, no one cited)",
+    "aiVis.opp.empty":     "No data. Run /api/snapshot after configuring ANTHROPIC_API_KEY (and optionally OPENAI / PERPLEXITY / YANDEX).",
+    "aiVis.opp.cleanRu":   "Competitors don't dominate AI Overviews yet.",
+    "aiVis.opp.compInAio": "competitors in AI Overview",
+
+    // Sales Pipeline / Bitrix (section 08)
+    "sales.title": "Leads and deals in Bitrix24",
+    "sales.desc":  "Real CRM data: leads by status and source, open deals, pipeline value.",
+    "sales.totalForPeriod": "Total for period",
+    "sales.topLeadsTitle": "Top lead sources",
+    "sales.topLeadsDesc":  "Where leads came from in the selected period.",
+    "sales.notConnected":  "Bitrix not connected",
+    "sales.empty":         "No sources found",
+
+    // Executive Brief (section 09)
+    "brief.title": "Weekly briefing",
+    "brief.desc":  "Auto-generated narrative across all sources above. Generated once a week.",
+    "brief.placeholder": "The briefing will appear after the first weekly snapshot with ANTHROPIC_API_KEY configured.",
+    "brief.grew": "What grew",
+    "brief.slipped": "Where we slipped",
+    "brief.actions": "Actions for next week",
+    "brief.watch": "Keep watching",
+    "brief.notConfigured": "Brief not configured",
   },
 };
 
@@ -1247,7 +1331,7 @@ function renderHeroDominance(data) {
     const sov = ai.stats.sov_pct != null ? `SOV ${(ai.stats.sov_pct * 100).toFixed(0)}%` : "SOV —";
     aiVisibilityFoot.textContent = `${sov} · ${ai.stats.brandMentioned || 0} mentions · ${ai.stats.brandCited || 0} cited`;
   } else {
-    aiVisibilityFoot.textContent = "Нет AI-данных за эту неделю";
+    aiVisibilityFoot.textContent = t("aiVis.noWeek");
   }
 
   const totalHistory = (data.totalDominanceHistory || []).map((h) => h.index).filter((v) => v != null);
@@ -1265,37 +1349,37 @@ function renderAiVisibilitySection(data) {
   const aip = sources.aiProbe || {};
 
   if (!aip.configured) {
-    setTag(aiState, "AI probe не подключён (нет API-ключей)", "warn");
+    setTag(aiState, t("aiVis.notConfigured"), "warn");
   } else if (ai.index == null) {
-    setTag(aiState, `${aip.engines.join(", ")} · нет данных за эту неделю`, "warn");
+    setTag(aiState, `${aip.engines.join(", ")} · ${t("aiVis.noData")}`, "warn");
   } else {
-    setTag(aiState, `${aip.engines.join(", ")} · ${aip.responsesThisWeek} ответов · score ${ai.index}`, "ok");
+    setTag(aiState, `${aip.engines.join(", ")} · ${aip.responsesThisWeek} ${t("aiVis.responsesShort")} · ${t("aiVis.scoreLabel")} ${ai.index}`, "ok");
   }
 
   const stats = ai.stats || {};
   aiSovValue.textContent = stats.sov_pct != null ? `${(stats.sov_pct * 100).toFixed(1)}%` : "—";
   aiSovMeta.textContent = stats.totalResponses
-    ? `${stats.brandMentioned || 0} brand mentions из ${stats.totalResponses} ответов`
+    ? `${stats.brandMentioned || 0} ${t("aiVis.brandMentionsTotal")} ${stats.totalResponses} ${t("aiVis.brandMentionsTotal2")}`
     : "—";
 
   aiMentionsValue.textContent = numberFormat.format(stats.brandMentioned || 0);
-  aiMentionsMeta.textContent = stats.totalResponses ? `всего ответов: ${stats.totalResponses}` : "—";
+  aiMentionsMeta.textContent = stats.totalResponses ? `${t("aiVis.allResponses")}: ${stats.totalResponses}` : "—";
 
   aiCitedValue.textContent = numberFormat.format(stats.brandCited || 0);
   aiCitedMeta.textContent = stats.brandMentioned
-    ? `${Math.round(((stats.brandCited || 0) / stats.brandMentioned) * 100)}% от упоминаний`
+    ? `${Math.round(((stats.brandCited || 0) / stats.brandMentioned) * 100)}% ${t("aiVis.ofMentions")}`
     : "—";
 
   const classifiedCount = stats.classifiedCount || 0;
   if (classifiedCount > 0 && ai.breakdown?.components?.positive != null) {
     const positiveRatio = ai.breakdown.components.positive / 2;
     aiPositiveValue.textContent = `${(positiveRatio * 100).toFixed(0)}%`;
-    aiPositiveMeta.textContent = `${classifiedCount} ответов классифицировано Haiku 4.5`;
+    aiPositiveMeta.textContent = `${classifiedCount} ${t("aiVis.classified")}`;
   } else {
     aiPositiveValue.textContent = "—";
     aiPositiveMeta.textContent = sources.aiClassifier?.configured
-      ? "Sentiment не запускался ещё"
-      : "Classifier не настроен (нет ANTHROPIC_API_KEY)";
+      ? t("aiVis.sentimentNotRun")
+      : t("aiVis.classifierMissing");
   }
 
   renderAiOverviews(data.aiOverviews);
@@ -1306,7 +1390,7 @@ function renderAiOverviews(aio) {
   aioStats.innerHTML = "";
   aioCards.innerHTML = "";
   if (!aio || aio.totalKeywords === 0) {
-    setTag(aioState, "SERP snapshot не загружен", "muted");
+    setTag(aioState, t("s03.notLoaded"), "muted");
     return;
   }
   setTag(aioState,
@@ -1337,11 +1421,11 @@ function renderAiOverviews(aio) {
     card.innerHTML = `<div class="aio-card-title">${title}</div><ol class="aio-list">${lis}</ol>`;
     aioCards.appendChild(card);
   };
-  renderCardSet("Где Magnum цитируют", aio.ourWins, "wins",
+  renderCardSet(t("aiVis.cards.wins"), aio.ourWins, "wins",
     (it) => `<span class="aio-kw">${escapeHtml(it.keyword)}</span><span class="aio-meta">${it.engine}/${it.lang}${it.alongsideCompetitors?.length ? ` · vs ${it.alongsideCompetitors.length}` : " · solo"}</span>`);
-  renderCardSet("Угрозы (конкуренты цитируются, мы — нет)", aio.threats, "threats",
+  renderCardSet(t("aiVis.cards.threats"), aio.threats, "threats",
     (it) => `<span class="aio-kw">${escapeHtml(it.keyword)}</span><span class="aio-meta">${it.engine}/${it.lang} · ${(it.competitors || []).length} comp.</span>`);
-  renderCardSet("Blue ocean (AI Overview есть, никто не цитирован)", aio.blueOcean, "blue",
+  renderCardSet(t("aiVis.cards.blue"), aio.blueOcean, "blue",
     (it) => `<span class="aio-kw">${escapeHtml(it.keyword)}</span><span class="aio-meta">${it.engine}/${it.lang}</span>`);
 }
 
@@ -1349,13 +1433,13 @@ function renderAiOpportunities(data) {
   aiOpportunitiesList.innerHTML = "";
   const aiResponses = data.aiVisibility?.stats?.totalResponses || 0;
   if (aiResponses === 0) {
-    aiOpportunitiesList.innerHTML = "<li class='ai-opp-empty'>Нет данных. Запустите /api/snapshot после настройки ANTHROPIC_API_KEY (и при желании OPENAI/PERPLEXITY/YANDEX).</li>";
+    aiOpportunitiesList.innerHTML = `<li class='ai-opp-empty'>${t("aiVis.opp.empty")}</li>`;
     return;
   }
   const aio = data.aiOverviews;
   const items = aio?.threats?.slice(0, 5) || [];
   if (items.length === 0) {
-    aiOpportunitiesList.innerHTML = "<li class='ai-opp-empty'>Конкуренты пока не доминируют в AI Overviews.</li>";
+    aiOpportunitiesList.innerHTML = `<li class='ai-opp-empty'>${t("aiVis.opp.cleanRu")}</li>`;
     return;
   }
   for (const it of items) {
@@ -1363,7 +1447,7 @@ function renderAiOpportunities(data) {
     li.className = "ai-opp-item";
     li.innerHTML = `
       <span class="ai-opp-kw">${escapeHtml(it.keyword)}</span>
-      <span class="ai-opp-meta">${it.engine}/${it.lang} · конкуренты в AI Overview: ${(it.competitors || []).length}</span>
+      <span class="ai-opp-meta">${it.engine}/${it.lang} · ${t("aiVis.opp.compInAio")}: ${(it.competitors || []).length}</span>
     `;
     aiOpportunitiesList.appendChild(li);
   }
@@ -1375,7 +1459,7 @@ function escapeHtml(s) {
 
 function renderBitrix(bitrix) {
   if (!bitrix?.leads?.current) {
-    setTag(bitrixState, "Bitrix не подключен", "muted");
+    setTag(bitrixState, t("sales.notConnected"), "muted");
     [
       bitrixLeadsTotal, bitrixQualified, bitrixDealsOpen, bitrixPipelineValue,
     ].forEach((el) => (el.textContent = "—"));
@@ -1385,7 +1469,7 @@ function renderBitrix(bitrix) {
     bitrixJunkRate.textContent = "Junk rate —";
     bitrixDealsBreakdown.textContent = "Won — · Lost —";
     bitrixWonValue.textContent = "Won —";
-    bitrixLeadsCaption.textContent = "Всего за период";
+    bitrixLeadsCaption.textContent = t("sales.totalForPeriod");
     return;
   }
 
@@ -1398,7 +1482,7 @@ function renderBitrix(bitrix) {
 
   bitrixLeadsTotal.textContent = numberFormat.format(cur.total);
   renderDelta(bitrixLeadsDelta, computeDelta(cur.total, prev.total));
-  bitrixLeadsCaption.textContent = "Всего за период";
+  bitrixLeadsCaption.textContent = t("sales.totalForPeriod");
 
   bitrixQualified.textContent = numberFormat.format(cur.qualified || 0);
   renderDelta(bitrixQualifiedDelta, computeDelta(cur.qualified, prev.qualified));
@@ -1419,7 +1503,7 @@ function renderBitrix(bitrix) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
     td.colSpan = 4;
-    td.textContent = "Источники не найдены";
+    td.textContent = t("sales.empty");
     td.className = "empty-cell";
     tr.appendChild(td);
     bitrixSourcesBody.appendChild(tr);
@@ -1458,9 +1542,8 @@ function renderBitrix(bitrix) {
 
 function renderBriefing(brief) {
   if (!brief || !brief.headline) {
-    setTag(briefingState, "Brief не настроен", "muted");
-    briefingHeadline.textContent =
-      "Сводка появится после первого weekly snapshot'а с настроенным ANTHROPIC_API_KEY.";
+    setTag(briefingState, t("brief.notConfigured"), "muted");
+    briefingHeadline.textContent = t("brief.placeholder");
     briefingGrew.textContent = "—";
     briefingSlipped.textContent = "—";
     briefingActions.innerHTML = "";
