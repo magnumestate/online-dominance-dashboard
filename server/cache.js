@@ -74,9 +74,11 @@ export function recordDominance({ index, breakdown }, date = today()) {
 }
 
 export function dominanceHistory(days = 30) {
+  // NB: `index` is a reserved word in SQLite — must be double-quoted.
+  // The client expects rows of { date, index } shape, so alias to "index".
   return getDb()
     .prepare(
-      "SELECT date, index_value AS index FROM dominance_history WHERE date >= date('now', ?) ORDER BY date"
+      `SELECT date, index_value AS "index" FROM dominance_history WHERE date >= date('now', ?) ORDER BY date`
     )
     .all(`-${days} days`);
 }
