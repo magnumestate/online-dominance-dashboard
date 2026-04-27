@@ -1,3 +1,24 @@
+// ── Theme (must run before paint to avoid FOUC) ──
+(function initTheme() {
+  const stored = localStorage.getItem("theme");
+  const initial = stored === "light" || stored === "dark" ? stored : "dark";
+  document.documentElement.setAttribute("data-theme", initial);
+  document.addEventListener("DOMContentLoaded", () => {
+    const buttons = document.querySelectorAll(".theme-toggle button");
+    function sync(theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+      localStorage.setItem("theme", theme);
+      buttons.forEach((b) => {
+        const active = b.dataset.theme === theme;
+        b.setAttribute("aria-pressed", active ? "true" : "false");
+        b.classList.toggle("active", active);
+      });
+    }
+    sync(initial);
+    buttons.forEach((b) => b.addEventListener("click", () => sync(b.dataset.theme)));
+  });
+})();
+
 const startInput = document.getElementById("startDate");
 const endInput = document.getElementById("endDate");
 const granularitySelect = document.getElementById("granularity");
@@ -42,6 +63,8 @@ const gscStateEl = document.getElementById("gscState");
 const serpStateEl = document.getElementById("serpState");
 const serpTableHead = document.getElementById("serpTableHead");
 const serpTableBody = document.getElementById("serpTableBody");
+const serpEngineSummary = document.getElementById("serpEngineSummary");
+const serpMovers = document.getElementById("serpMovers");
 
 const seoStateEl = document.getElementById("seoState");
 const seoPctEl = document.getElementById("seoPct");
@@ -291,9 +314,175 @@ function renderGsc(gsc) {
   gscPositionEl.textContent = `средняя позиция ${gsc.totals.position.toFixed(1)}`;
 }
 
+function renderEngineSummary(serp) {
+  if (!serpEngineSummary) return;
+  serpEngineSummary.innerHTML = "";
+  if (!serp || !serp.keywords || !serp.competitors) return;
+
+  const us = serp.competitors.us.domain;
+  const others = serp.competitors.competitors.map((c) => c.domain);
+
+  const byEngine = new Map();
+  let ourTop10 = 0;
+  let theirTop10 = 0;
+
+  for (const row of serp.keywords) {
+    const engine = (row.engine || "google").toLowerCase();
+    if (!byEngine.has(engine)) byEngine.set(engine, { total: 0, ourTop10: 0, ourBest: null });
+    const bucket = byEngine.get(engine);
+    bucket.total++;
+    const ourPos = row.positions[us];
+    if (ourPos != null) {
+      if (ourPos <= 10) {
+        bucket.ourTop10++;
+        ourTop10++;
+      }
+      if (bucket.ourBest == null || ourPos < bucket.ourBest) bucket.ourBest = ourPos;
+    }
+    for (const d of others) {
+      const p = row.positions[d];
+      if (p != null && p <= 10) theirTop10++;
+    }
+  }
+
+  const sharePct = ourTop10 + theirTop10 > 0
+    ? Math.round((ourTop10 / (ourTop10 + theirTop10)) * 100)
+    : 0;
+
+  for (const [engine, b] of byEngine.entries()) {
+    const tile = document.createElement("div");
+    tile.className = `engine-tile engine-${engine}`;
+    tile.innerHTML = `
+      <span class="engine-tile-label">${engine}</span>
+      <span class="engine-tile-stat"><b>${b.ourTop10}</b>/${b.total} <em>top-10</em></span>
+      <span class="engine-tile-stat best">best <b>${b.ourBest != null ? "#" + b.ourBest : "—"}</b></span>
+    `;
+    serpEngineSummary.appendChild(tile);
+  }
+
+  const overall = document.createElement("div");
+  overall.className = "engine-tile coverage";
+  overall.innerHTML = `
+    <span class="engine-tile-label">SoV in top-10</span>
+    <span class="engine-tile-stat coverage-value"><b>${sharePct}%</b></span>
+    <span class="engine-tile-stat"><em>наш ${ourTop10} · конкуренты ${theirTop10}</em></span>
+  `;
+  serpEngineSummary.appendChild(overall);
+}
+
+function renderMovers(serp) {
+  if (!serpMovers) return;
+  serpMovers.innerHTML = "";
+  if (!serp || !serp.keywords || !serp.competitors) return;
+
+  const us = serp.competitors.us.domain;
+  const others = serp.competitors.competitors.map((c) => c.domain);
+
+  // Where we win: keywords where we're best (lowest position) of all tracked
+  const winners = serp.keywords
+    .map((row) => {
+      const ourPos = row.positions[us];
+      if (ourPos == null) return null;
+      const competitorBest = Math.min(
+        Infinity,
+        ...others.map((d) => row.positions[d]).filter((p) => p != null)
+      );
+      const lead = competitorBest === Infinity ? Infinity : competitorBest - ourPos;
+      return { keyword: row.keyword, engine: row.engine, ourPos, competitorBest, lead };
+    })
+    .filter((x) => x && x.lead > 0)
+    .sort((a, b) => a.ourPos - b.ourPos)
+    .slice(0, 3);
+
+  // Where we miss most: keyword where competitor is in top-5 and we're absent
+  const opportunities = serp.keywords
+    .map((row) => {
+      const ourPos = row.positions[us];
+      if (ourPos != null) return null;
+      const compPositions = others
+        .map((d) => ({ domain: d, pos: row.positions[d] }))
+        .filter((x) => x.pos != null && x.pos <= 5);
+      if (compPositions.length === 0) return null;
+      compPositions.sort((a, b) => a.pos - b.pos);
+      return { keyword: row.keyword, engine: row.engine, leader: compPositions[0] };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.leader.pos - b.leader.pos)
+    .slice(0, 3);
+
+  // Open SERP: nobody in top-10 — pure white space
+  const open = serp.keywords
+    .map((row) => {
+      const everyone = [us, ...others].map((d) => row.positions[d]);
+      const minPos = Math.min(Infinity, ...everyone.filter((p) => p != null));
+      return { keyword: row.keyword, engine: row.engine, minPos };
+    })
+    .filter((x) => x.minPos === Infinity || x.minPos > 10)
+    .slice(0, 3);
+
+  const competitorByDomain = new Map(
+    [serp.competitors.us, ...serp.competitors.competitors].map((c) => [c.domain, c.name])
+  );
+  const engineLabel = (e) => (e && e !== "google" ? `<span class="mover-engine">${e}</span>` : "");
+  const card = (slug, title, items, emptyText, kind) => {
+    const lis = items.length
+      ? items.map((it) => kind(it)).join("")
+      : `<li class="mover-empty">${emptyText}</li>`;
+    return `
+      <div class="mover-card mover-${slug}">
+        <div class="mover-title">${title}</div>
+        <ol class="mover-list">${lis}</ol>
+      </div>
+    `;
+  };
+
+  const winHTML = card(
+    "winning",
+    "Где выигрываем",
+    winners,
+    "Нет ключей, где мы впереди всех",
+    (it) => `
+      <li>
+        <span class="mover-kw">${it.keyword}${engineLabel(it.engine)}</span>
+        <span class="mover-stat"><b>#${it.ourPos}</b>${it.competitorBest === Infinity ? "" : ` <em>vs #${it.competitorBest}</em>`}</span>
+      </li>
+    `
+  );
+
+  const oppHTML = card(
+    "missing",
+    "Где упускаем",
+    opportunities,
+    "Конкуренты не доминируют ни в одном ключе",
+    (it) => `
+      <li>
+        <span class="mover-kw">${it.keyword}${engineLabel(it.engine)}</span>
+        <span class="mover-stat"><em>${competitorByDomain.get(it.leader.domain) || it.leader.domain}</em> <b>#${it.leader.pos}</b></span>
+      </li>
+    `
+  );
+
+  const openHTML = card(
+    "open",
+    "SERP открыта",
+    open,
+    "Все ключи закрыты конкурентами",
+    (it) => `
+      <li>
+        <span class="mover-kw">${it.keyword}${engineLabel(it.engine)}</span>
+        <span class="mover-stat"><em>топ-10 пуст</em></span>
+      </li>
+    `
+  );
+
+  serpMovers.innerHTML = winHTML + oppHTML + openHTML;
+}
+
 function renderSerp(serp) {
   serpTableHead.innerHTML = "";
   serpTableBody.innerHTML = "";
+  renderEngineSummary(serp);
+  renderMovers(serp);
 
   if (!serp || !serp.keywords || serp.keywords.length === 0) {
     setTag(serpStateEl, "SERP snapshot не загружен", "warn");
@@ -453,6 +642,11 @@ function renderDashboard(data) {
 
   dominanceScore.textContent = data.dominance.index;
   dominanceStatus.textContent = data.dominance.status;
+  const statusSlug = String(data.dominance.status || "")
+    .toLowerCase()
+    .replace(/[^a-z]+/g, "-")
+    .replace(/^-|-$/g, "");
+  dominanceStatus.className = `dominance-status status-${statusSlug || "unknown"}`;
   const fillWidth = Math.min(data.dominance.index, 160) / 160;
   dominanceFill.style.width = `${Math.round(fillWidth * 100)}%`;
 
