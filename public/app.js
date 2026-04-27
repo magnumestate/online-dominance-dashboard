@@ -507,7 +507,6 @@ const bitrixDealsDelta = document.getElementById("bitrixDealsDelta");
 const bitrixDealsBreakdown = document.getElementById("bitrixDealsBreakdown");
 const bitrixPipelineValue = document.getElementById("bitrixPipelineValue");
 const bitrixPipelineDelta = document.getElementById("bitrixPipelineDelta");
-const bitrixWonValue = document.getElementById("bitrixWonValue");
 const bitrixSourcesBody = document.getElementById("bitrixSourcesBody");
 
 const briefingState = document.getElementById("briefingState");
@@ -1457,6 +1456,41 @@ function escapeHtml(s) {
   return String(s || "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
 
+// Bitrix24 source IDs come from many integrations (Wazzup, Facebook,
+// webform, etc.) and often include a "<userId>|" routing prefix.
+// Map them to human-readable channel names so the table reads naturally.
+function readableBitrixSource(raw) {
+  if (!raw) return "(unknown)";
+  const stripped = String(raw).replace(/^\d+\|/, ""); // drop "9|" assignee prefix
+
+  if (/^WZ_WHATSAPP/i.test(stripped)) return "WhatsApp";
+  if (/^WZ/i.test(stripped))          return "WhatsApp (Wazzup)";
+  if (/FBINSTAGRAMDIRECT/i.test(stripped)) return "Instagram Direct";
+  if (/FBINSTAGRAM/i.test(stripped))       return "Instagram";
+  if (/^FB/i.test(stripped))               return "Facebook";
+  if (/TELEGRAM/i.test(stripped))          return "Telegram";
+  if (/VIBER/i.test(stripped))             return "Viber";
+  if (/^WEBFORM$/i.test(stripped)) return "Website form";
+  if (/^WEB$/i.test(stripped))     return "Website";
+  if (/^GOOGLE_MAPS$/i.test(stripped)) return "Google Maps";
+  if (/^CALL(BACK)?$/i.test(stripped)) return "Call";
+  if (/^EMAIL$/i.test(stripped))   return "Email";
+  // Bitrix internal source list IDs are usually short uppercase tokens
+  if (/^[0-9A-F]{8,}$/i.test(stripped)) return `Other channel (${stripped.slice(0, 6)})`;
+  return stripped;
+}
+
+// Aggregate raw bitrix sources by readable name (so multiple
+// "1|WZ_WHATSAPP_…" / "9|WZ_WHATSAPP_…" rows collapse into one).
+function aggregateBitrixSources(sources) {
+  const agg = new Map();
+  for (const s of sources || []) {
+    const name = readableBitrixSource(s.source);
+    agg.set(name, (agg.get(name) || 0) + (s.count || 0));
+  }
+  return agg;
+}
+
 function renderBitrix(bitrix) {
   if (!bitrix?.leads?.current) {
     setTag(bitrixState, t("sales.notConnected"), "muted");
@@ -1468,7 +1502,6 @@ function renderBitrix(bitrix) {
     bitrixSourcesBody.innerHTML = "";
     bitrixJunkRate.textContent = "Junk rate —";
     bitrixDealsBreakdown.textContent = "Won — · Lost —";
-    bitrixWonValue.textContent = "Won —";
     bitrixLeadsCaption.textContent = t("sales.totalForPeriod");
     return;
   }
@@ -1494,12 +1527,15 @@ function renderBitrix(bitrix) {
 
   bitrixPipelineValue.textContent = formatCompactCurrency(dCur.pipeline_value);
   renderDelta(bitrixPipelineDelta, computeDelta(dCur.pipeline_value, dPrev.pipeline_value));
-  bitrixWonValue.textContent = `Won ${formatCompactCurrency(dCur.won_value)}`;
+  // bitrixWonValue caption removed by design — total sales digit was noise
+  // when most deals are still in progress (won_value=0). Won count is still
+  // visible on the "Deals open" card via bitrixDealsBreakdown.
 
-  // Top sources table — match current sources against previous to show delta
-  const prevByName = new Map((prev.sources || []).map((s) => [s.source, s.count]));
+  // Top sources table — aggregate by readable name, then diff vs previous
+  const aggCur = aggregateBitrixSources(cur.sources);
+  const aggPrev = aggregateBitrixSources(prev.sources);
   bitrixSourcesBody.innerHTML = "";
-  if (!cur.sources?.length) {
+  if (aggCur.size === 0) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
     td.colSpan = 4;
@@ -1508,35 +1544,38 @@ function renderBitrix(bitrix) {
     tr.appendChild(td);
     bitrixSourcesBody.appendChild(tr);
   } else {
-    cur.sources.slice(0, 10).forEach((s) => {
-      const tr = document.createElement("tr");
-      const prevCount = prevByName.get(s.source) || 0;
-      const tdName = document.createElement("td");
-      tdName.textContent = s.source;
-      const tdCur = document.createElement("td");
-      tdCur.className = "numeric-cell";
-      tdCur.textContent = numberFormat.format(s.count);
-      const tdPrev = document.createElement("td");
-      tdPrev.className = "numeric-cell";
-      tdPrev.textContent = prevCount ? numberFormat.format(prevCount) : "—";
-      const tdDelta = document.createElement("td");
-      tdDelta.className = "numeric-cell";
-      const delta = computeDelta(s.count, prevCount);
-      if (delta == null) {
-        tdDelta.textContent = "—";
-        tdDelta.style.color = "var(--paper-faint)";
-      } else {
-        const pct = Math.abs(delta * 100);
-        const sign = delta > 0 ? "▲ " : delta < 0 ? "▼ " : "";
-        tdDelta.textContent = sign + (pct >= 1000 ? ">999" : pct.toFixed(1)) + "%";
-        tdDelta.style.color = delta > 0 ? "var(--positive)" : delta < 0 ? "var(--negative)" : "var(--paper-faint)";
-      }
-      tr.appendChild(tdName);
-      tr.appendChild(tdCur);
-      tr.appendChild(tdPrev);
-      tr.appendChild(tdDelta);
-      bitrixSourcesBody.appendChild(tr);
-    });
+    Array.from(aggCur.entries())
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .forEach(([name, count]) => {
+        const tr = document.createElement("tr");
+        const prevCount = aggPrev.get(name) || 0;
+        const tdName = document.createElement("td");
+        tdName.textContent = name;
+        const tdCur = document.createElement("td");
+        tdCur.className = "numeric-cell";
+        tdCur.textContent = numberFormat.format(count);
+        const tdPrev = document.createElement("td");
+        tdPrev.className = "numeric-cell";
+        tdPrev.textContent = prevCount ? numberFormat.format(prevCount) : "—";
+        const tdDelta = document.createElement("td");
+        tdDelta.className = "numeric-cell";
+        const delta = computeDelta(count, prevCount);
+        if (delta == null) {
+          tdDelta.textContent = "—";
+          tdDelta.style.color = "var(--paper-faint)";
+        } else {
+          const pct = Math.abs(delta * 100);
+          const sign = delta > 0 ? "▲ " : delta < 0 ? "▼ " : "";
+          tdDelta.textContent = sign + (pct >= 1000 ? ">999" : pct.toFixed(1)) + "%";
+          tdDelta.style.color = delta > 0 ? "var(--positive)" : delta < 0 ? "var(--negative)" : "var(--paper-faint)";
+        }
+        tr.appendChild(tdName);
+        tr.appendChild(tdCur);
+        tr.appendChild(tdPrev);
+        tr.appendChild(tdDelta);
+        bitrixSourcesBody.appendChild(tr);
+      });
   }
 }
 
