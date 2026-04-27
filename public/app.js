@@ -8,6 +8,16 @@ const sessionsValue = document.getElementById("sessionsValue");
 const leadsValue = document.getElementById("leadsValue");
 const engagementValue = document.getElementById("engagementValue");
 const reachValue = document.getElementById("reachValue");
+const sessionsDelta = document.getElementById("sessionsDelta");
+const leadsDelta = document.getElementById("leadsDelta");
+const engagementDelta = document.getElementById("engagementDelta");
+const reachDelta = document.getElementById("reachDelta");
+const sessionsSpark = document.getElementById("sessionsSpark");
+const leadsSpark = document.getElementById("leadsSpark");
+const engagementSpark = document.getElementById("engagementSpark");
+const reachSpark = document.getElementById("reachSpark");
+const heroMetaPeriod = document.getElementById("heroMetaPeriod");
+const heroMetaPrev = document.getElementById("heroMetaPrev");
 const dominanceScore = document.getElementById("dominanceScore");
 const dominanceStatus = document.getElementById("dominanceStatus");
 const dominanceFill = document.getElementById("dominanceFill");
@@ -68,6 +78,93 @@ function defaultDates() {
 function setTag(el, text, mode = "ok") {
   el.textContent = text;
   el.className = mode === "ok" ? "tag" : mode === "warn" ? "tag warn" : "tag muted";
+}
+
+function computeDelta(current, previous) {
+  if (current == null || previous == null) return null;
+  if (previous === 0) return current > 0 ? 1 : null; // unbounded growth — show as +100% sentinel
+  return (current - previous) / previous;
+}
+
+function renderDelta(el, delta) {
+  if (delta == null) {
+    el.textContent = "—";
+    el.className = "delta-value neutral";
+    return;
+  }
+  const positive = delta > 0;
+  const negative = delta < 0;
+  const arrow = positive ? "▲" : negative ? "▼" : "·";
+  const pct = Math.abs(delta * 100);
+  const formatted = pct >= 1000 ? ">999" : pct.toFixed(1);
+  el.innerHTML = `<span class="arrow">${arrow}</span>${formatted}%`;
+  el.className = `delta-value ${positive ? "positive" : negative ? "negative" : "neutral"}`;
+}
+
+function renderSparkline(container, values, color) {
+  container.innerHTML = "";
+  if (!values || values.length < 2) return;
+  const w = container.clientWidth || 200;
+  const h = container.clientHeight || 32;
+  const pad = 1.5;
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  const range = max - min || 1;
+  const step = (w - pad * 2) / (values.length - 1);
+
+  const points = values.map((v, i) => {
+    const x = pad + i * step;
+    const y = h - pad - ((v - min) / range) * (h - pad * 2);
+    return [x, y];
+  });
+  const linePath = points.map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x.toFixed(2)},${y.toFixed(2)}`).join(" ");
+  const lastX = points[points.length - 1][0];
+  const lastY = points[points.length - 1][1];
+  const areaPath = `${linePath} L ${lastX.toFixed(2)},${h - pad} L ${pad},${h - pad} Z`;
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  svg.setAttribute("preserveAspectRatio", "none");
+
+  const area = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  area.setAttribute("d", areaPath);
+  area.setAttribute("fill", color);
+  area.setAttribute("opacity", "0.14");
+  svg.appendChild(area);
+
+  const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  line.setAttribute("d", linePath);
+  line.setAttribute("fill", "none");
+  line.setAttribute("stroke", color);
+  line.setAttribute("stroke-width", "1.4");
+  line.setAttribute("stroke-linecap", "round");
+  line.setAttribute("stroke-linejoin", "round");
+  svg.appendChild(line);
+
+  // Endpoint marker
+  const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  dot.setAttribute("cx", lastX.toFixed(2));
+  dot.setAttribute("cy", lastY.toFixed(2));
+  dot.setAttribute("r", "1.8");
+  dot.setAttribute("fill", color);
+  svg.appendChild(dot);
+
+  container.appendChild(svg);
+}
+
+function compactDate(iso) {
+  if (!iso) return "—";
+  // 2026-04-26 → 26.04.26
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return iso;
+  return `${m[3]}.${m[2]}.${m[1].slice(2)}`;
+}
+
+function periodLength(startISO, endISO) {
+  if (!startISO || !endISO) return null;
+  const a = new Date(startISO);
+  const b = new Date(endISO);
+  return Math.round((b - a) / (24 * 60 * 60 * 1000)) + 1;
 }
 
 function renderList(target, list, emptyText) {
@@ -335,18 +432,40 @@ function renderSourceStatus(sources) {
 let lastData = null;
 
 function renderDashboard(data) {
-  sessionsValue.textContent = numberFormat.format(data.totals?.sessions || 0);
-  leadsValue.textContent = numberFormat.format(data.totals?.leads || 0);
-  engagementValue.textContent = percentFormat.format(data.totals?.engagementRate || 0);
-  reachValue.textContent = numberFormat.format(data.totals?.totalUsers || 0);
+  const totals = data.totals || {};
+  const prev = data.previousTotals || {};
+
+  sessionsValue.textContent = numberFormat.format(totals.sessions || 0);
+  leadsValue.textContent = numberFormat.format(totals.leads || 0);
+  engagementValue.textContent = percentFormat.format(totals.engagementRate || 0);
+  reachValue.textContent = numberFormat.format(totals.totalUsers || 0);
+
+  renderDelta(sessionsDelta, computeDelta(totals.sessions, prev.sessions));
+  renderDelta(leadsDelta, computeDelta(totals.leads, prev.leads));
+  renderDelta(engagementDelta, computeDelta(totals.engagementRate, prev.engagementRate));
+  renderDelta(reachDelta, computeDelta(totals.totalUsers, prev.totalUsers));
+
+  const series = data.series || [];
+  renderSparkline(sessionsSpark, series.map((s) => s.sessions), "#c9a96e");
+  renderSparkline(leadsSpark, series.map((s) => s.leads), "#d4685a");
+  renderSparkline(engagementSpark, series.map((s) => s.engagementRate), "#84b685");
+  renderSparkline(reachSpark, series.map((s) => s.totalUsers), "#c9a96e");
 
   dominanceScore.textContent = data.dominance.index;
   dominanceStatus.textContent = data.dominance.status;
   const fillWidth = Math.min(data.dominance.index, 160) / 160;
   dominanceFill.style.width = `${Math.round(fillWidth * 100)}%`;
 
-  periodLabel.textContent = `${data.meta.startDate} — ${data.meta.endDate}`;
-  previousPeriod.textContent = `Предыдущий период: ${data.meta.previousStartDate} — ${data.meta.previousEndDate}`;
+  const periodDays = periodLength(data.meta.startDate, data.meta.endDate);
+  if (heroMetaPeriod) {
+    heroMetaPeriod.textContent = `Period · ${compactDate(data.meta.startDate)} → ${compactDate(data.meta.endDate)}${periodDays ? ` · ${periodDays}D` : ""}`;
+  }
+  if (heroMetaPrev) {
+    heroMetaPrev.textContent = `Previous · ${compactDate(data.meta.previousStartDate)} → ${compactDate(data.meta.previousEndDate)}`;
+  }
+
+  periodLabel.textContent = `${compactDate(data.meta.startDate)} → ${compactDate(data.meta.endDate)}`;
+  previousPeriod.textContent = `Previous · ${compactDate(data.meta.previousStartDate)} → ${compactDate(data.meta.previousEndDate)}`;
 
   renderList(leadEventsList, data.meta.leadEvents, "Lead события не указаны");
   renderList(activityList, data.activities, "Активности не найдены");

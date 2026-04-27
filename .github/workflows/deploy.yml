@@ -1,0 +1,84 @@
+name: Deploy to production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: rsync + pm2 restart
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      REMOTE_PATH: /home/ubuntu/online-dominance-dashboard
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Rsync project to server
+        run: |
+          rsync -avz --delete \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='node_modules/' \
+            --exclude='.env' \
+            --exclude='service-account.json' \
+            --exclude='data/snapshots.db*' \
+            --exclude='.DS_Store' \
+            --exclude='*.local.png' \
+            --exclude='redesign-*.png' \
+            -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" \
+            ./ \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:$REMOTE_PATH/
+
+      - name: Install deps + restart PM2
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'EOF'
+            set -e
+            cd /home/ubuntu/online-dominance-dashboard
+            # Install only if package-lock.json changed since last install
+            if [ ! -f node_modules/.lock-hash ] || ! sha256sum -c node_modules/.lock-hash --status 2>/dev/null; then
+              echo "→ npm ci (lockfile changed or first run)"
+              npm ci --omit=dev
+              sha256sum package-lock.json > node_modules/.lock-hash
+            else
+              echo "→ skipping npm ci (lockfile unchanged)"
+            fi
+            pm2 restart dominance-dashboard --update-env
+            pm2 save
+          EOF
+
+      - name: Health check
+        run: |
+          sleep 3
+          for i in 1 2 3 4 5; do
+            STATUS=$(curl -sw "%{http_code}" -o /tmp/health.json --max-time 10 \
+              https://dominance.stanislav-sadovnikov.com/api/health || echo "failed")
+            if [ "$STATUS" = "200" ]; then
+              echo "✓ healthy on attempt $i"
+              cat /tmp/health.json
+              exit 0
+            fi
+            echo "attempt $i: HTTP $STATUS — retrying"
+            sleep 4
+          done
+          echo "✗ health check failed after 5 attempts"
+          exit 1
+
+      - name: Cleanup
+        if: always()
+        run: rm -f ~/.ssh/id_ed25519
