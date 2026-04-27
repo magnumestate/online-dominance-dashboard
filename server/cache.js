@@ -51,6 +51,22 @@ export function readLatestSnapshot(type) {
   return row ? { date: row.date, payload: JSON.parse(row.payload) } : null;
 }
 
+export function readPreviousSnapshot(type, beforeDate) {
+  const row = getDb()
+    .prepare(
+      "SELECT date, payload FROM snapshots WHERE type = ? AND date < ? ORDER BY date DESC LIMIT 1"
+    )
+    .get(type, beforeDate);
+  return row ? { date: row.date, payload: JSON.parse(row.payload) } : null;
+}
+
+export function listSnapshotDates(type, limit = 12) {
+  return getDb()
+    .prepare("SELECT date FROM snapshots WHERE type = ? ORDER BY date DESC LIMIT ?")
+    .all(type, limit)
+    .map((r) => r.date);
+}
+
 export function recordDominance({ index, breakdown }, date = today()) {
   getDb()
     .prepare("INSERT OR REPLACE INTO dominance_history (date, index_value, breakdown) VALUES (?, ?, ?)")

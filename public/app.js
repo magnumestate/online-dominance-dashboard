@@ -65,6 +65,8 @@ const serpTableHead = document.getElementById("serpTableHead");
 const serpTableBody = document.getElementById("serpTableBody");
 const serpEngineSummary = document.getElementById("serpEngineSummary");
 const serpMovers = document.getElementById("serpMovers");
+const serpFiltersEl = document.getElementById("serpFilters");
+const intersectionEl = document.getElementById("intersectionList");
 
 const seoStateEl = document.getElementById("seoState");
 const seoPctEl = document.getElementById("seoPct");
@@ -370,11 +372,100 @@ function renderEngineSummary(serp) {
   serpEngineSummary.appendChild(overall);
 }
 
-function renderMovers(serp) {
-  if (!serpMovers) return;
-  serpMovers.innerHTML = "";
-  if (!serp || !serp.keywords || !serp.competitors) return;
+function moverEngineLabel(e) {
+  return e && e !== "google" ? `<span class="mover-engine">${e}</span>` : "";
+}
 
+function moverCard(slug, title, items, emptyText, renderItem) {
+  const lis = items.length
+    ? items.map((it) => renderItem(it)).join("")
+    : `<li class="mover-empty">${emptyText}</li>`;
+  return `
+    <div class="mover-card mover-${slug}">
+      <div class="mover-title">${title}</div>
+      <ol class="mover-list">${lis}</ol>
+    </div>
+  `;
+}
+
+function posCell(p) {
+  return p == null ? "—" : `#${p}`;
+}
+
+function renderTrueMovers(diff) {
+  const since = diff.previousDate || diff.sinceDate || "—";
+  const meta = `
+    <div class="movers-meta">
+      <span>vs <b>${since}</b></span>
+      <span>·</span>
+      <span>${diff.totalCompared} keys compared</span>
+      <span>·</span>
+      <span>${diff.stableCount} stable</span>
+    </div>
+  `;
+
+  const risersHTML = moverCard(
+    "winning",
+    "▲ Поднялись",
+    diff.risers,
+    "Нет улучшений с прошлого snapshot'а",
+    (it) => `
+      <li>
+        <span class="mover-kw">${it.keyword}${moverEngineLabel(it.engine)}</span>
+        <span class="mover-stat">
+          <b class="delta-up">▲${it.delta}</b>
+          <em>${posCell(it.prevPos)}→${posCell(it.curPos)}</em>
+        </span>
+      </li>
+    `
+  );
+
+  const fallersHTML = moverCard(
+    "missing",
+    "▼ Просели",
+    diff.fallers,
+    "Нет проседаний — отлично",
+    (it) => `
+      <li>
+        <span class="mover-kw">${it.keyword}${moverEngineLabel(it.engine)}</span>
+        <span class="mover-stat">
+          <b class="delta-down">▼${Math.abs(it.delta)}</b>
+          <em>${posCell(it.prevPos)}→${posCell(it.curPos)}</em>
+        </span>
+      </li>
+    `
+  );
+
+  const churn = [
+    ...diff.newEntrants.map((it) => ({ ...it, kind: "new" })),
+    ...diff.lost.map((it) => ({ ...it, kind: "lost" })),
+  ].slice(0, 5);
+
+  const churnHTML = moverCard(
+    "open",
+    "Новые / потеряли",
+    churn,
+    "Нет смены состава топ-100",
+    (it) => `
+      <li>
+        <span class="mover-kw">${it.keyword}${moverEngineLabel(it.engine)}</span>
+        <span class="mover-stat">
+          ${
+            it.kind === "new"
+              ? `<b class="delta-up">★ NEW</b><em>${posCell(it.curPos)}</em>`
+              : `<b class="delta-down">✖ LOST</b><em>was ${posCell(it.prevPos)}</em>`
+          }
+        </span>
+      </li>
+    `
+  );
+
+  serpMovers.innerHTML = meta + risersHTML + fallersHTML + churnHTML;
+  serpMovers.classList.add("has-diff");
+}
+
+function renderSyntheticMovers(serp) {
+  serpMovers.classList.remove("has-diff");
   const us = serp.competitors.us.domain;
   const others = serp.competitors.competitors.map((c) => c.domain);
 
@@ -423,53 +514,41 @@ function renderMovers(serp) {
   const competitorByDomain = new Map(
     [serp.competitors.us, ...serp.competitors.competitors].map((c) => [c.domain, c.name])
   );
-  const engineLabel = (e) => (e && e !== "google" ? `<span class="mover-engine">${e}</span>` : "");
-  const card = (slug, title, items, emptyText, kind) => {
-    const lis = items.length
-      ? items.map((it) => kind(it)).join("")
-      : `<li class="mover-empty">${emptyText}</li>`;
-    return `
-      <div class="mover-card mover-${slug}">
-        <div class="mover-title">${title}</div>
-        <ol class="mover-list">${lis}</ol>
-      </div>
-    `;
-  };
 
-  const winHTML = card(
+  const winHTML = moverCard(
     "winning",
     "Где выигрываем",
     winners,
     "Нет ключей, где мы впереди всех",
     (it) => `
       <li>
-        <span class="mover-kw">${it.keyword}${engineLabel(it.engine)}</span>
+        <span class="mover-kw">${it.keyword}${moverEngineLabel(it.engine)}</span>
         <span class="mover-stat"><b>#${it.ourPos}</b>${it.competitorBest === Infinity ? "" : ` <em>vs #${it.competitorBest}</em>`}</span>
       </li>
     `
   );
 
-  const oppHTML = card(
+  const oppHTML = moverCard(
     "missing",
     "Где упускаем",
     opportunities,
     "Конкуренты не доминируют ни в одном ключе",
     (it) => `
       <li>
-        <span class="mover-kw">${it.keyword}${engineLabel(it.engine)}</span>
+        <span class="mover-kw">${it.keyword}${moverEngineLabel(it.engine)}</span>
         <span class="mover-stat"><em>${competitorByDomain.get(it.leader.domain) || it.leader.domain}</em> <b>#${it.leader.pos}</b></span>
       </li>
     `
   );
 
-  const openHTML = card(
+  const openHTML = moverCard(
     "open",
     "SERP открыта",
     open,
     "Все ключи закрыты конкурентами",
     (it) => `
       <li>
-        <span class="mover-kw">${it.keyword}${engineLabel(it.engine)}</span>
+        <span class="mover-kw">${it.keyword}${moverEngineLabel(it.engine)}</span>
         <span class="mover-stat"><em>топ-10 пуст</em></span>
       </li>
     `
@@ -478,11 +557,92 @@ function renderMovers(serp) {
   serpMovers.innerHTML = winHTML + oppHTML + openHTML;
 }
 
-function renderSerp(serp) {
+function renderMovers(serp, diff) {
+  if (!serpMovers) return;
+  serpMovers.innerHTML = "";
+  if (!serp || !serp.keywords || !serp.competitors) return;
+
+  const hasMovement =
+    diff &&
+    ((diff.risers && diff.risers.length) ||
+      (diff.fallers && diff.fallers.length) ||
+      (diff.newEntrants && diff.newEntrants.length) ||
+      (diff.lost && diff.lost.length));
+
+  if (hasMovement) {
+    renderTrueMovers(diff);
+  } else {
+    renderSyntheticMovers(serp);
+  }
+}
+
+// SERP table filter state (module-scoped, persisted to localStorage)
+const serpFilterState = {
+  nonBrand: false,
+  yandex: false,
+  missing: false,
+};
+try {
+  const stored = JSON.parse(localStorage.getItem("serpFilters") || "{}");
+  Object.assign(serpFilterState, stored);
+} catch {}
+
+let lastSerp = null;
+let lastSerpFilters = null;
+
+function persistSerpFilters() {
+  try { localStorage.setItem("serpFilters", JSON.stringify(serpFilterState)); } catch {}
+}
+
+function isBrandKeyword(row) {
+  const tag = (row.tag || "").toLowerCase();
+  const group = (row.group || "").toLowerCase();
+  return group === "brand_baseline" || tag.includes("brand");
+}
+
+function applySerpFilters(rows, ourDomain) {
+  return rows.filter((row) => {
+    if (serpFilterState.nonBrand && isBrandKeyword(row)) return false;
+    if (serpFilterState.yandex && (row.engine || "google").toLowerCase() !== "yandex") return false;
+    if (serpFilterState.missing && row.positions[ourDomain] != null) return false;
+    return true;
+  });
+}
+
+function renderSerpFilters() {
+  if (!serpFiltersEl) return;
+  const buttons = [
+    { key: "nonBrand", label: "Только non-brand" },
+    { key: "yandex",   label: "Только Yandex" },
+    { key: "missing",  label: "Где мы вне ТОП-100" },
+  ];
+  serpFiltersEl.innerHTML = buttons
+    .map(
+      (b) => `
+        <button type="button" data-filter="${b.key}" class="${serpFilterState[b.key] ? "active" : ""}">
+          ${b.label}
+        </button>
+      `
+    )
+    .join("");
+  serpFiltersEl.querySelectorAll("button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const k = btn.dataset.filter;
+      serpFilterState[k] = !serpFilterState[k];
+      persistSerpFilters();
+      renderSerp(lastSerp, lastSerpFilters);
+    });
+  });
+}
+
+function renderSerp(serp, diff) {
+  lastSerp = serp;
+  lastSerpFilters = diff;
   serpTableHead.innerHTML = "";
   serpTableBody.innerHTML = "";
   renderEngineSummary(serp);
-  renderMovers(serp);
+  renderMovers(serp, diff);
+  renderSerpFilters();
 
   if (!serp || !serp.keywords || serp.keywords.length === 0) {
     setTag(serpStateEl, "SERP snapshot не загружен", "warn");
@@ -499,11 +659,15 @@ function renderSerp(serp) {
   const ourDomain = competitors.us.domain;
   const allDomains = [competitors.us, ...competitors.competitors];
 
-  setTag(
-    serpStateEl,
-    `${serp.keywords.length} ключей · snapshot ${serp.snapshotDate || "—"}`,
-    "ok"
-  );
+  const filtered = applySerpFilters(serp.keywords, ourDomain);
+  const activeFilters = Object.entries(serpFilterState)
+    .filter(([, v]) => v)
+    .map(([k]) => k);
+
+  const stateText = activeFilters.length
+    ? `${filtered.length}/${serp.keywords.length} · snapshot ${serp.snapshotDate || "—"} · фильтры: ${activeFilters.length}`
+    : `${serp.keywords.length} ключей · snapshot ${serp.snapshotDate || "—"}`;
+  setTag(serpStateEl, stateText, "ok");
 
   const headers = ["Запрос", ...allDomains.map((c) => c.name)];
   headers.forEach((label, idx) => {
@@ -513,7 +677,18 @@ function renderSerp(serp) {
     serpTableHead.appendChild(th);
   });
 
-  serp.keywords.forEach((row) => {
+  if (filtered.length === 0) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.textContent = "Под выбранные фильтры ключи не подходят.";
+    td.className = "empty-cell";
+    td.colSpan = headers.length;
+    tr.appendChild(td);
+    serpTableBody.appendChild(tr);
+    return;
+  }
+
+  filtered.forEach((row) => {
     const tr = document.createElement("tr");
 
     const tdName = document.createElement("td");
@@ -542,6 +717,101 @@ function renderSerp(serp) {
 
     serpTableBody.appendChild(tr);
   });
+}
+
+// ─────────── GSC × SERP intersection: where competitors outrank us ───────────
+
+function renderIntersection(gsc, serp) {
+  if (!intersectionEl) return;
+  intersectionEl.innerHTML = "";
+  if (!gsc?.topQueries || !serp?.keywords || !serp?.competitors) {
+    intersectionEl.innerHTML = `
+      <p class="intersection-empty">
+        Для этой секции нужны одновременно GSC и SERP snapshot. Когда оба будут доступны — здесь появятся ключи, по которым мы ранжируемся, но конкуренты выше.
+      </p>
+    `;
+    return;
+  }
+
+  const ourDomain = serp.competitors.us.domain;
+  const competitorByDomain = new Map(
+    serp.competitors.competitors.map((c) => [c.domain, c.name])
+  );
+  const others = serp.competitors.competitors.map((c) => c.domain);
+
+  // Index GSC queries by lowercased keyword
+  const gscByKey = new Map();
+  for (const q of gsc.topQueries) {
+    if (q.query) gscByKey.set(q.query.toLowerCase().trim(), q);
+  }
+
+  const outranked = [];
+  for (const row of serp.keywords) {
+    const key = row.keyword.toLowerCase().trim();
+    const gscQ = gscByKey.get(key);
+    if (!gscQ) continue;
+    const ourGsc = gscQ.position;
+    if (!ourGsc || ourGsc <= 0) continue;
+    // Find best competitor in SERP for this keyword
+    const compHits = others
+      .map((d) => ({ domain: d, pos: row.positions[d] }))
+      .filter((x) => x.pos != null);
+    if (compHits.length === 0) continue;
+    compHits.sort((a, b) => a.pos - b.pos);
+    const leader = compHits[0];
+    const gap = ourGsc - leader.pos; // positive: competitor is better
+    if (gap < 2) continue; // skip noise: must be at least 2 positions behind
+    outranked.push({
+      keyword: row.keyword,
+      engine: row.engine || "google",
+      ourGsc,
+      ourGscRounded: Math.round(ourGsc * 10) / 10,
+      ourClicks: gscQ.clicks || 0,
+      ourImpr: gscQ.impressions || 0,
+      leader,
+      leaderName: competitorByDomain.get(leader.domain) || leader.domain,
+      gap,
+    });
+  }
+
+  outranked.sort((a, b) => b.gap - a.gap);
+  const top = outranked.slice(0, 8);
+
+  if (top.length === 0) {
+    intersectionEl.innerHTML = `
+      <p class="intersection-empty">
+        Нет ключей, где мы ранжируемся, но конкурент впереди ≥2 позиций. Это хорошо: вы либо лидер, либо не пересекаетесь.
+      </p>
+    `;
+    return;
+  }
+
+  const itemsHTML = top
+    .map(
+      (it, i) => `
+        <li>
+          <span class="ix-rank">${String(i + 1).padStart(2, "0")}</span>
+          <span class="ix-kw">${it.keyword}${moverEngineLabel(it.engine)}</span>
+          <span class="ix-our">
+            <em>наш GSC</em> <b>#${it.ourGscRounded}</b>
+            <small>${numberFormat.format(it.ourClicks)} clicks · ${compactFormat.format(it.ourImpr)} impr</small>
+          </span>
+          <span class="ix-arrow">→</span>
+          <span class="ix-leader">
+            <em>${it.leaderName}</em> <b>#${it.leader.pos}</b>
+          </span>
+          <span class="ix-gap"><b>−${it.gap.toFixed(1)}</b></span>
+        </li>
+      `
+    )
+    .join("");
+
+  intersectionEl.innerHTML = `
+    <div class="intersection-meta">
+      Найдено <b>${outranked.length}</b> пересечений · показаны ${top.length} с самым большим разрывом
+    </div>
+    <ol class="intersection-list">${itemsHTML}</ol>
+  `;
 }
 
 function renderSeoProgress(seo) {
@@ -665,7 +935,8 @@ function renderDashboard(data) {
   renderList(activityList, data.activities, "Активности не найдены");
   renderSourceTable(data.trafficSources);
   renderGsc(data.gsc);
-  renderSerp(data.serp);
+  renderSerp(data.serp, data.serpDiff);
+  renderIntersection(data.gsc, data.serp);
   renderSeoProgress(data.seoProgress);
   renderDominanceTrend(data.dominanceHistory, data.dominance.index);
   renderSourceStatus(data.sources);
