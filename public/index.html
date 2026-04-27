@@ -13,9 +13,15 @@
       <!-- ─────────────── TOPBAR ─────────────── -->
       <div class="topbar">
         <span class="topbar-brand">MAGNUM ESTATE  ·  ONLINE DOMINANCE INDEX  ·  EXECUTIVE BRIEFING</span>
-        <div class="theme-toggle" role="group" aria-label="Theme">
-          <button type="button" data-theme="dark" aria-pressed="true">Dark</button>
-          <button type="button" data-theme="light" aria-pressed="false">Light</button>
+        <div class="topbar-toggles">
+          <div class="lang-toggle" role="group" aria-label="Language">
+            <button type="button" data-lang="ru" aria-pressed="true">RU</button>
+            <button type="button" data-lang="en" aria-pressed="false">EN</button>
+          </div>
+          <div class="theme-toggle" role="group" aria-label="Theme">
+            <button type="button" data-theme="dark" aria-pressed="true" data-i18n="topbar.dark">Dark</button>
+            <button type="button" data-theme="light" aria-pressed="false" data-i18n="topbar.light">Light</button>
+          </div>
         </div>
       </div>
 
@@ -24,7 +30,7 @@
         <div>
           <p class="eyebrow">Q2 · 2026</p>
           <h1>Online&nbsp;Dominance<br/>Index</h1>
-          <p class="subhead">
+          <p class="subhead" data-i18n="hero.subhead">
             Сводный показатель присутствия Magnum Estate в digital-канале.
             Объединяет органический поиск, позиции против конкурентов,
             конверсию и исполнение SEO-стратегии в одну величину.
@@ -37,7 +43,7 @@
         </div>
         <div class="dominance-card">
           <div>
-            <div class="dominance-label">Текущее значение</div>
+            <div class="dominance-label" data-i18n="hero.currentValue">Текущее значение</div>
             <div class="dominance-score" id="dominanceScore">—</div>
           </div>
           <div>
@@ -46,7 +52,7 @@
               <div class="dominance-fill" id="dominanceFill"></div>
             </div>
             <div class="dominance-foot">
-              <span>100 = стабильность · 130+ = доминирование</span>
+              <span data-i18n="hero.scaleHint">100 = стабильность · 130+ = доминирование</span>
             </div>
           </div>
         </div>
@@ -55,26 +61,26 @@
       <!-- ─────────────── CONTROLS ─────────────── -->
       <section class="controls">
         <div class="control">
-          <label for="startDate">Период · от</label>
+          <label for="startDate" data-i18n="controls.from">Период · от</label>
           <input type="date" id="startDate" />
         </div>
         <div class="control">
-          <label for="endDate">Период · до</label>
+          <label for="endDate" data-i18n="controls.to">Период · до</label>
           <input type="date" id="endDate" />
         </div>
         <div class="control">
-          <label for="granularity">Шаг</label>
+          <label for="granularity" data-i18n="controls.step">Шаг</label>
           <select id="granularity">
-            <option value="day">День</option>
-            <option value="week">Неделя</option>
-            <option value="month">Месяц</option>
+            <option value="day"   data-i18n="controls.day">День</option>
+            <option value="week"  data-i18n="controls.week">Неделя</option>
+            <option value="month" data-i18n="controls.month">Месяц</option>
           </select>
         </div>
         <div class="control">
-          <label for="channelGroup">Канал</label>
+          <label for="channelGroup" data-i18n="controls.channel">Канал</label>
           <select id="channelGroup">
-            <option value="all">Все источники</option>
-            <option value="social">Социальные</option>
+            <option value="all"            data-i18n="controls.allSources">Все источники</option>
+            <option value="social"         data-i18n="controls.social">Социальные</option>
             <option value="organic-social">Organic Social</option>
             <option value="paid-social">Paid Social</option>
             <option value="organic">Organic Search</option>
@@ -82,7 +88,7 @@
             <option value="referral">Referral</option>
           </select>
         </div>
-        <button id="applyFilters">Обновить</button>
+        <button id="applyFilters" data-i18n="controls.refresh">Обновить</button>
       </section>
 
       <!-- ─────────────── 01 / TRAFFIC INTELLIGENCE ─────────────── -->
@@ -90,8 +96,8 @@
         <p class="section-marker"><span class="num">01</span>Traffic Intelligence</p>
         <div class="section-header">
           <div>
-            <h2>Объёмы и конверсия за период</h2>
-            <p>Google Analytics 4 — сеансы, лиды, вовлечённость, охват уникальных пользователей.</p>
+            <h2 data-i18n="s01.title">Объёмы и конверсия за период</h2>
+            <p data-i18n="s01.desc">Google Analytics 4 — сеансы, лиды, вовлечённость, охват уникальных пользователей.</p>
           </div>
         </div>
         <div class="metrics">
@@ -100,7 +106,7 @@
             <div class="metric-value" id="sessionsValue">—</div>
             <div class="metric-delta">
               <span class="delta-value neutral" id="sessionsDelta">—</span>
-              <span class="delta-label">vs prev</span>
+              <span class="delta-label" data-i18n="s01.vsPrev">vs prev</span>
             </div>
             <div class="metric-spark" id="sessionsSpark"></div>
           </article>
@@ -109,7 +115,7 @@
             <div class="metric-value" id="leadsValue">—</div>
             <div class="metric-delta">
               <span class="delta-value neutral" id="leadsDelta">—</span>
-              <span class="delta-label">vs prev</span>
+              <span class="delta-label" data-i18n="s01.vsPrev">vs prev</span>
             </div>
             <div class="metric-spark" id="leadsSpark"></div>
           </article>
@@ -118,7 +124,7 @@
             <div class="metric-value" id="engagementValue">—</div>
             <div class="metric-delta">
               <span class="delta-value neutral" id="engagementDelta">—</span>
-              <span class="delta-label">vs prev</span>
+              <span class="delta-label" data-i18n="s01.vsPrev">vs prev</span>
             </div>
             <div class="metric-spark" id="engagementSpark"></div>
           </article>
@@ -127,7 +133,7 @@
             <div class="metric-value" id="reachValue">—</div>
             <div class="metric-delta">
               <span class="delta-value neutral" id="reachDelta">—</span>
-              <span class="delta-label">vs prev</span>
+              <span class="delta-label" data-i18n="s01.vsPrev">vs prev</span>
             </div>
             <div class="metric-spark" id="reachSpark"></div>
           </article>
@@ -140,7 +146,7 @@
         <div class="section-header">
           <div>
             <h2>Brand vs Non-Brand</h2>
-            <p>Search Console: бренд работает, рост non-brand — главный приоритет квартала.</p>
+            <p data-i18n="s02.desc">Search Console: бренд работает, рост non-brand — главный приоритет квартала.</p>
           </div>
           <span id="gscState" class="tag muted">—</span>
         </div>
@@ -168,8 +174,8 @@
         <p class="section-marker"><span class="num">03</span>Competitive SERP</p>
         <div class="section-header">
           <div>
-            <h2>Позиции Magnum Estate vs конкуренты</h2>
-            <p>Weekly snapshot через Bright Data SERP API — Google + Yandex. Лучшая позиция в строке выделена золотом.</p>
+            <h2 data-i18n="s03.title">Позиции Magnum Estate vs конкуренты</h2>
+            <p data-i18n="s03.desc">Weekly snapshot через Bright Data SERP API — Google + Yandex. Лучшая позиция в строке выделена золотом.</p>
           </div>
           <span id="serpState" class="tag muted">—</span>
         </div>
@@ -191,8 +197,8 @@
         <p class="section-marker"><span class="num">03B</span>Outranked</p>
         <div class="section-header">
           <div>
-            <h2>Где конкуренты обходят нас</h2>
-            <p>
+            <h2 data-i18n="s03b.title">Где конкуренты обходят нас</h2>
+            <p data-i18n="s03b.desc">
               Пересечение GSC (мы там ранжируемся) и SERP (где они выше).
               Эти ключи — самые легкие апсайды: уже виден сигнал релевантности,
               осталось обогнать одного игрока.
@@ -207,8 +213,8 @@
         <p class="section-marker"><span class="num">04</span>Acquisition</p>
         <div class="section-header">
           <div>
-            <h2>Источники трафика</h2>
-            <p>Source / medium / channel из GA4 с разбивкой по сеансам, лидам и lead rate.</p>
+            <h2 data-i18n="s04.title">Источники трафика</h2>
+            <p data-i18n="s04.desc">Source / medium / channel из GA4 с разбивкой по сеансам, лидам и lead rate.</p>
           </div>
           <span id="sourceCount">—</span>
         </div>
@@ -237,7 +243,7 @@
         <div class="section-header">
           <div>
             <h2>SEO Recommendations Progress</h2>
-            <p>Прогресс по контент-плану — Authoritative Content sheet.</p>
+            <p data-i18n="s05.desc">Прогресс по контент-плану — Authoritative Content sheet.</p>
           </div>
           <span id="seoState" class="tag muted">—</span>
         </div>
@@ -256,8 +262,8 @@
         <p class="section-marker"><span class="num">06</span>Time Series</p>
         <div class="section-header">
           <div>
-            <h2>Динамика за период</h2>
-            <p>Трафик и лиды, тренд индекса доминирования, вовлечённость.</p>
+            <h2 data-i18n="s06.title">Динамика за период</h2>
+            <p data-i18n="s06.desc">Трафик и лиды, тренд индекса доминирования, вовлечённость.</p>
           </div>
         </div>
         <div class="charts">
@@ -271,7 +277,7 @@
           <div class="chart-card">
             <div class="chart-header">
               <h3>Dominance Index</h3>
-              <span class="chart-meta" id="diMeta">30 дней</span>
+              <span class="chart-meta" id="diMeta" data-i18n="s06.thirtyDays">30 дней</span>
             </div>
             <div class="chart" id="diTrendChart"></div>
           </div>
@@ -290,14 +296,14 @@
         <p class="section-marker"><span class="num">07</span>Notes &amp; Definitions</p>
         <div class="section-header">
           <div>
-            <h2>Методология и контекст</h2>
-            <p>Веса индекса, отслеживаемые события, статус источников.</p>
+            <h2 data-i18n="s07.title">Методология и контекст</h2>
+            <p data-i18n="s07.desc">Веса индекса, отслеживаемые события, статус источников.</p>
           </div>
         </div>
         <div class="insights">
           <div class="insight-card">
             <h3>Index weights</h3>
-            <p>Dominance Index 2.0 объединяет рост non-brand, SERP-покрытие, рост лидов, рост трафика и прогресс SEO-плана.</p>
+            <p data-i18n="s07.indexExplain">Dominance Index 2.0 объединяет рост non-brand, SERP-покрытие, рост лидов, рост трафика и прогресс SEO-плана.</p>
             <div class="weights">
               <div><span>Non-brand</span><span>30%</span></div>
               <div><span>SERP top-10</span><span>25%</span></div>
