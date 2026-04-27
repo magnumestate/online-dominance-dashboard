@@ -291,9 +291,78 @@
         </div>
       </section>
 
-      <!-- ─────────────── 07 / NOTES ─────────────── -->
+      <!-- ─────────────── 07 / SALES PIPELINE ─────────────── -->
       <section class="section-block">
-        <p class="section-marker"><span class="num">07</span>Notes &amp; Definitions</p>
+        <p class="section-marker"><span class="num">07</span>Sales Pipeline</p>
+        <div class="section-header">
+          <div>
+            <h2>Лиды и сделки в Bitrix24</h2>
+            <p>Реальные CRM-данные: лиды по статусу и источнику, активные сделки и стоимость pipeline.</p>
+          </div>
+          <span id="bitrixState" class="tag muted">—</span>
+        </div>
+        <div class="metrics bitrix-metrics">
+          <article class="metric-card">
+            <h3>Leads</h3>
+            <div class="metric-value" id="bitrixLeadsTotal">—</div>
+            <div class="metric-delta">
+              <span class="delta-value neutral" id="bitrixLeadsDelta">—</span>
+              <span class="delta-label" data-i18n="s01.vsPrev">vs prev</span>
+            </div>
+            <p class="metric-caption" id="bitrixLeadsCaption">Всего за период</p>
+          </article>
+          <article class="metric-card">
+            <h3>Qualified</h3>
+            <div class="metric-value" id="bitrixQualified">—</div>
+            <div class="metric-delta">
+              <span class="delta-value neutral" id="bitrixQualifiedDelta">—</span>
+              <span class="delta-label" data-i18n="s01.vsPrev">vs prev</span>
+            </div>
+            <p class="metric-caption" id="bitrixJunkRate">Junk rate —</p>
+          </article>
+          <article class="metric-card">
+            <h3>Deals open</h3>
+            <div class="metric-value" id="bitrixDealsOpen">—</div>
+            <div class="metric-delta">
+              <span class="delta-value neutral" id="bitrixDealsDelta">—</span>
+              <span class="delta-label" data-i18n="s01.vsPrev">vs prev</span>
+            </div>
+            <p class="metric-caption" id="bitrixDealsBreakdown">Won — · Lost —</p>
+          </article>
+          <article class="metric-card">
+            <h3>Pipeline</h3>
+            <div class="metric-value" id="bitrixPipelineValue">—</div>
+            <div class="metric-delta">
+              <span class="delta-value neutral" id="bitrixPipelineDelta">—</span>
+              <span class="delta-label" data-i18n="s01.vsPrev">vs prev</span>
+            </div>
+            <p class="metric-caption" id="bitrixWonValue">Won —</p>
+          </article>
+        </div>
+        <div class="section-header" style="margin-top: 28px">
+          <div>
+            <h2>Top lead sources</h2>
+            <p>Откуда пришли лиды за выбранный период.</p>
+          </div>
+        </div>
+        <div class="source-table-wrap">
+          <table class="source-table bitrix-sources-table">
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>Current</th>
+                <th>Previous</th>
+                <th>Delta</th>
+              </tr>
+            </thead>
+            <tbody id="bitrixSourcesBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ─────────────── 08 / NOTES ─────────────── -->
+      <section class="section-block">
+        <p class="section-marker"><span class="num">08</span>Notes &amp; Definitions</p>
         <div class="section-header">
           <div>
             <h2 data-i18n="s07.title">Методология и контекст</h2>
@@ -305,11 +374,12 @@
             <h3>Index weights</h3>
             <p data-i18n="s07.indexExplain">Dominance Index 2.0 объединяет рост non-brand, SERP-покрытие, рост лидов, рост трафика и прогресс SEO-плана.</p>
             <div class="weights">
-              <div><span>Non-brand</span><span>30%</span></div>
-              <div><span>SERP top-10</span><span>25%</span></div>
-              <div><span>Leads</span><span>20%</span></div>
-              <div><span>Traffic</span><span>15%</span></div>
-              <div><span>SEO progress</span><span>10%</span></div>
+              <div><span>Non-brand</span><span>28%</span></div>
+              <div><span>SERP top-10</span><span>22%</span></div>
+              <div><span>Leads</span><span>18%</span></div>
+              <div><span>Traffic</span><span>14%</span></div>
+              <div><span>Sales execution</span><span>10%</span></div>
+              <div><span>SEO progress</span><span>8%</span></div>
             </div>
           </div>
           <div class="insight-card">

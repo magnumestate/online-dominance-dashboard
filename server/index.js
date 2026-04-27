@@ -8,6 +8,7 @@ import * as ga4 from "./sources/ga4.js";
 import * as gsc from "./sources/gsc.js";
 import * as serp from "./sources/serp.js";
 import * as seoProgress from "./sources/seo-progress.js";
+import * as bitrix from "./sources/bitrix.js";
 import { dominanceIndex } from "./score.js";
 import { diffSerp } from "./diff.js";
 import {
@@ -36,6 +37,7 @@ app.get("/api/health", (_req, res) => {
       gsc: gsc.isConfigured(),
       serp: serp.isConfigured(),
       seoProgress: seoProgress.isConfigured(),
+      bitrix: bitrix.isConfigured(),
     },
   });
 });
@@ -87,6 +89,19 @@ app.get("/api/dashboard", async (req, res) => {
         )
       );
     }
+    if (bitrix.isConfigured()) {
+      tasks.push(
+        settled(
+          "bitrix",
+          bitrix.fetchBitrixSnapshot({
+            startDate,
+            endDate,
+            previousStartDate: prev.startDate,
+            previousEndDate: prev.endDate,
+          })
+        )
+      );
+    }
     const serpCached = readLatestSnapshot("serp");
     const serpPrevCached = serpCached ? readPreviousSnapshot("serp", serpCached.date) : null;
     const seoCached = readLatestSnapshot("seo-progress");
@@ -96,6 +111,7 @@ app.get("/api/dashboard", async (req, res) => {
 
     const ga4Data = byLabel.ga4?.ok ? byLabel.ga4.data : null;
     const gscData = byLabel.gsc?.ok ? byLabel.gsc.data : null;
+    const bitrixData = byLabel.bitrix?.ok ? byLabel.bitrix.data : null;
     const serpData = serpCached?.payload || null;
     const seoData = seoCached?.payload || null;
 
@@ -104,6 +120,7 @@ app.get("/api/dashboard", async (req, res) => {
       gsc: gscData,
       serp: serpData,
       seoProgress: seoData,
+      bitrix: bitrixData,
     });
 
     const history = (() => {
@@ -147,6 +164,7 @@ app.get("/api/dashboard", async (req, res) => {
       seoProgress: seoData
         ? { ...seoData, snapshotDate: seoCached.date }
         : null,
+      bitrix: bitrixData,
       dominance,
       dominanceHistory: history,
       sources: {
@@ -154,6 +172,7 @@ app.get("/api/dashboard", async (req, res) => {
         gsc: { configured: gsc.isConfigured(), ok: byLabel.gsc?.ok ?? false, error: byLabel.gsc?.error },
         serp: { configured: serp.isConfigured(), cached: Boolean(serpCached), date: serpCached?.date },
         seoProgress: { configured: seoProgress.isConfigured(), cached: Boolean(seoCached), date: seoCached?.date },
+        bitrix: { configured: bitrix.isConfigured(), ok: byLabel.bitrix?.ok ?? false, error: byLabel.bitrix?.error },
       },
     });
   } catch (error) {
@@ -185,6 +204,22 @@ app.get("/api/serp", async (_req, res) => {
   try {
     const data = await serp.fetchSerpSnapshot();
     writeSnapshot("serp", data);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/bitrix", async (req, res) => {
+  if (!bitrix.isConfigured()) return res.status(400).json({ error: "Bitrix CRM not configured" });
+  try {
+    const { startDate, endDate, prev } = defaultRange(req);
+    const data = await bitrix.fetchBitrixSnapshot({
+      startDate,
+      endDate,
+      previousStartDate: prev.startDate,
+      previousEndDate: prev.endDate,
+    });
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -231,6 +266,12 @@ app.post("/api/snapshot", async (req, res) => {
   }
   if (serp.isConfigured()) tasks.push(settled("serp", serp.fetchSerpSnapshot()));
   if (seoProgress.isConfigured()) tasks.push(settled("seo-progress", seoProgress.fetchSeoProgress()));
+  if (bitrix.isConfigured()) {
+    tasks.push(settled("bitrix", bitrix.fetchBitrixSnapshot({
+      startDate, endDate,
+      previousStartDate: prev.startDate, previousEndDate: prev.endDate,
+    })));
+  }
 
   const results = await Promise.all(tasks);
   const summary = {};
@@ -241,6 +282,7 @@ app.post("/api/snapshot", async (req, res) => {
     }
     if (r.ok && r.label === "ga4") writeSnapshot("ga4-totals", { totals: r.data.totals, previousTotals: r.data.previousTotals });
     if (r.ok && r.label === "gsc") writeSnapshot("gsc-totals", { totals: r.data.totals, previousTotals: r.data.previousTotals, brandSplit: r.data.brandSplit });
+    if (r.ok && r.label === "bitrix") writeSnapshot("bitrix", r.data);
   }
 
   const byLabel = Object.fromEntries(results.map((r) => [r.label, r]));
@@ -251,6 +293,9 @@ app.post("/api/snapshot", async (req, res) => {
     seoProgress: byLabel["seo-progress"]?.ok
       ? byLabel["seo-progress"].data
       : readLatestSnapshot("seo-progress")?.payload,
+    bitrix: byLabel.bitrix?.ok
+      ? byLabel.bitrix.data
+      : readLatestSnapshot("bitrix")?.payload,
   });
 
   recordDominance(dominance);

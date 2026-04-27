@@ -1,19 +1,23 @@
 import { safeRatio } from "./utils.js";
 import { summarizeSerp } from "./sources/serp.js";
+import { salesExecutionComponent } from "./sources/bitrix.js";
 
+// v3 weights — added sales_execution as 6th component (CRM pipeline value
+// growth from Bitrix24). Other components shrunk uniformly to fit. Total = 100.
 const WEIGHTS = {
-  nonBrandGrowth: 0.30,
-  serpCoverage: 0.25,
-  leadGrowth: 0.20,
-  trafficGrowth: 0.15,
-  seoExecution: 0.10,
+  nonBrandGrowth: 0.28,
+  serpCoverage: 0.22,
+  leadGrowth: 0.18,
+  trafficGrowth: 0.14,
+  seoExecution: 0.08,
+  salesExecution: 0.10,
 };
 
 function clip(value, min = 0, max = 2) {
   return Math.max(min, Math.min(max, value));
 }
 
-export function dominanceIndex({ ga4, gsc, serp, seoProgress }) {
+export function dominanceIndex({ ga4, gsc, serp, seoProgress, bitrix }) {
   const components = {};
   const explanations = {};
 
@@ -58,6 +62,18 @@ export function dominanceIndex({ ga4, gsc, serp, seoProgress }) {
   } else {
     components.seoExecution = 1;
     explanations.seoExecution = "SEO progress not configured — neutral";
+  }
+
+  if (bitrix?.deals?.current) {
+    components.salesExecution = salesExecutionComponent(bitrix);
+    const cur = bitrix.deals.current;
+    const prev = bitrix.deals.previous;
+    const curTotal = (cur.won_value || 0) + (cur.pipeline_value || 0);
+    const prevTotal = prev ? (prev.won_value || 0) + (prev.pipeline_value || 0) : 0;
+    explanations.salesExecution = `pipeline ${curTotal.toLocaleString()} vs ${prevTotal.toLocaleString()}`;
+  } else {
+    components.salesExecution = 1;
+    explanations.salesExecution = "Bitrix CRM not configured — neutral";
   }
 
   let weighted = 0;

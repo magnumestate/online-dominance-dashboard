@@ -4,11 +4,12 @@ Marketing intelligence для Magnum Estate — собирает GA4, Google Sea
 
 ## Что показывает
 
-- **Dominance Index 2.0** — взвешенная свёртка пяти источников
+- **Dominance Index 2.1** — взвешенная свёртка шести источников
 - **GA4** — трафик, лиды, источники
 - **GSC** — clicks/impressions/CTR + brand vs non-brand split
 - **SERP-позиции** — `magnumestate.com` против 4 конкурентов по ~30 ключам в Google **и Yandex** (Bright Data SERP API, weekly)
 - **SEO progress** — % выполненных рекомендаций из контент-плана
+- **Bitrix24 CRM** — лиды (total/qualified/junk + источники), сделки (won/lost/open), стоимость pipeline
 - **30-дневный тренд** индекса (snapshot-based)
 
 ## Запуск локально
@@ -45,6 +46,7 @@ curl -X POST -H "Authorization: Bearer $SNAPSHOT_TOKEN" \
 | `BRIGHT_DATA_API_KEY` | Bearer token для Bright Data SERP API (см. https://brightdata.com/cp/setting/users) |
 | `BRIGHT_DATA_SERP_ZONE` | имя SERP-зоны из dashboard Bright Data (создаётся один раз) |
 | `SEO_PROGRESS_SHEET_ID` | ID Google Sheet с контент-планом |
+| `BITRIX_WEBHOOK_URL` | inbound webhook URL из Bitrix24 (CRM-скоуп) |
 | `SNAPSHOT_TOKEN` | bearer для защиты `/api/snapshot` |
 
 ## Конфиг данных
@@ -61,17 +63,20 @@ curl -X POST -H "Authorization: Bearer $SNAPSHOT_TOKEN" \
 1. В Bright Data dashboard создать зону типа "SERP API" — имя пойдёт в `BRIGHT_DATA_SERP_ZONE`
 2. Сгенерировать API-токен в Settings → API tokens → положить в `BRIGHT_DATA_API_KEY`
 
-## Dominance Index 2.0
+## Dominance Index 2.1
 
 ```
-DI = 0.30 × Non-brand growth (GSC non-brand clicks vs prev period)
-   + 0.25 × SERP coverage (наш Top-10 / (наш + конкуренты в Top-10))
-   + 0.20 × Lead growth (GA4 key events vs prev)
-   + 0.15 × Traffic growth (GA4 sessions vs prev)
-   + 0.10 × SEO execution (% Done из контент-плана)
+DI = 0.28 × Non-brand growth (GSC non-brand clicks vs prev period)
+   + 0.22 × SERP coverage (наш Top-10 / (наш + конкуренты в Top-10))
+   + 0.18 × Lead growth (GA4 key events vs prev)
+   + 0.14 × Traffic growth (GA4 sessions vs prev)
+   + 0.10 × Sales execution (Bitrix CRM pipeline value vs prev)
+   + 0.08 × SEO execution (% Done из контент-плана)
 ```
 
 Каждый компонент капируется в [0, 2]. Итог × 100. Статусы: ≥130 Dominating, ≥110 Gaining, ≤90 Slipping, ≤70 At Risk.
+
+**v2.1 changelog:** добавлен 6-й компонент (sales_execution через Bitrix24 pipeline). Веса остальных уменьшены пропорционально.
 
 ## Деплой на Render
 
