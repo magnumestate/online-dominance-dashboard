@@ -1,0 +1,93 @@
+name: Validate PR
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: validate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: lint · imports · env coverage · secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Syntax check all JS files
+        run: |
+          set -e
+          while IFS= read -r -d '' f; do
+            node --check "$f"
+            echo "  ✓ $f"
+          done < <(find server public -name '*.js' -not -path '*/node_modules/*' -print0)
+
+      - name: Smoke import server modules
+        run: |
+          node --input-type=module -e "
+            const mods = [
+              './server/utils.js',
+              './server/score.js',
+              './server/cache.js',
+              './server/sources/ga4.js',
+              './server/sources/gsc.js',
+              './server/sources/serp.js',
+              './server/sources/seo-progress.js',
+            ];
+            for (const m of mods) {
+              await import(m);
+              console.log('  ✓', m);
+            }
+          "
+
+      - name: Validate JSON data files
+        run: |
+          set -e
+          for f in package.json package-lock.json data/*.json; do
+            [ -f "$f" ] || continue
+            node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))"
+            echo "  ✓ $f"
+          done
+
+      - name: .env.example covers all process.env reads in server/
+        run: |
+          set -e
+          grep -rho 'process\.env\.[A-Z_][A-Z0-9_]*' server/ \
+            | sed 's/process\.env\.//' \
+            | sort -u > /tmp/used.txt
+          grep -Eo '^[A-Z_][A-Z0-9_]*=' .env.example \
+            | tr -d '=' \
+            | sort -u > /tmp/declared.txt
+          missing="$(comm -23 /tmp/used.txt /tmp/declared.txt | grep -v '^$' || true)"
+          if [ -n "$missing" ]; then
+            echo "::error::env vars referenced in server/ but missing from .env.example:"
+            echo "$missing" | sed 's/^/  ✗ /'
+            exit 1
+          fi
+          echo "  ✓ .env.example in sync ($(wc -l < /tmp/used.txt) vars checked)"
+
+      - name: No secrets / private files committed
+        run: |
+          set -e
+          fail=0
+          for f in .env service-account.json data/snapshots.db; do
+            if [ -f "$f" ]; then
+              echo "::error file=$f::secret/private file must never be committed"
+              fail=1
+            fi
+          done
+          [ "$fail" -eq 0 ] && echo "  ✓ no secrets in tree"
+          exit "$fail"
