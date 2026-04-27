@@ -87,25 +87,64 @@ async function fetchOneSerp(kw) {
   }
 }
 
-function parseOrganic(payload) {
-  // Bright Data wraps the SERP response: { status_code, headers, body }
-  // body can be a JSON string (Full JSON format) — parse if needed.
+function unwrapPayload(payload) {
   let root = payload?.body ?? payload?.data ?? payload;
   if (typeof root === "string") {
     try {
       root = JSON.parse(root);
     } catch {
-      return [];
+      return null;
     }
   }
+  return root;
+}
+
+function parseOrganic(payload) {
+  const root = unwrapPayload(payload);
+  if (!root) return [];
   const organic = root?.organic || root?.results?.organic || [];
   return organic.map((item, i) => ({
     rank: item.rank ?? item.position ?? item.global_rank ?? i + 1,
     link: item.link || item.url || "",
-    // display_link is unreliable (sometimes "› bali" or "325K+ followers"),
-    // so derive domain from the actual link URL.
     domain: extractHost(item.link || item.url || ""),
   }));
+}
+
+export function parseAiOverview(payload) {
+  const root = unwrapPayload(payload);
+  if (!root) return null;
+  const candidate =
+    root?.ai_overview ||
+    root?.aiOverview ||
+    root?.generative_ai ||
+    root?.generativeAi ||
+    root?.sge ||
+    root?.ai_snapshot ||
+    root?.results?.ai_overview ||
+    null;
+  if (!candidate) return null;
+
+  const text =
+    candidate.text ||
+    candidate.summary ||
+    candidate.content ||
+    (Array.isArray(candidate.text_blocks) ? candidate.text_blocks.join("\n") : "") ||
+    "";
+
+  const sourceList =
+    candidate.sources ||
+    candidate.references ||
+    candidate.citations ||
+    candidate.links ||
+    [];
+
+  const sources = (Array.isArray(sourceList) ? sourceList : []).map((s) => {
+    if (typeof s === "string") return { url: s, domain: extractHost(s), title: null };
+    const url = s.link || s.url || s.href || "";
+    return { url, domain: extractHost(url), title: s.title || s.name || null };
+  });
+
+  return { present: true, text, sources, excerpt: (text || "").slice(0, 400) };
 }
 
 async function pLimit(items, concurrency, worker) {
@@ -127,9 +166,12 @@ export async function fetchSerpSnapshot() {
   const enginesUsed = new Set();
   const errors = {};
 
+  const aiOverviews = [];
+
   const rows = await pLimit(keywords, MAX_CONCURRENT, async (kw) => {
     enginesUsed.add(kw.engine || "google");
     const positions = Object.fromEntries(allDomains.map((d) => [d, null]));
+    let aiOverview = null;
     try {
       const payload = await fetchOneSerp(kw);
       const organic = parseOrganic(payload);
@@ -137,9 +179,31 @@ export async function fetchSerpSnapshot() {
         const hit = organic.find((it) => matchesDomain(it.domain, dom));
         positions[dom] = hit ? hit.rank : null;
       }
+      aiOverview = parseAiOverview(payload);
     } catch (err) {
       errors[kw.q] = err.message;
       console.error(`[serp] ${kw.engine} "${kw.q}":`, err.message);
+    }
+    if (aiOverview) {
+      const usDom = competitors.us.domain;
+      const competitorDoms = competitors.competitors.map((c) => c.domain);
+      const brandCited = aiOverview.sources.some((s) => matchesDomain(s.domain, usDom));
+      const competitorsCited = competitorDoms.filter((d) =>
+        aiOverview.sources.some((s) => matchesDomain(s.domain, d))
+      );
+      aiOverviews.push({
+        keyword: kw.q,
+        engine: kw.engine || "google",
+        lang: kw.lang,
+        country: kw.country,
+        group: kw.group,
+        tag: kw.tag,
+        present: true,
+        excerpt: aiOverview.excerpt,
+        sources: aiOverview.sources.slice(0, 10),
+        brand_cited: brandCited,
+        competitors_cited: competitorsCited,
+      });
     }
     return {
       keyword: kw.q,
@@ -149,6 +213,7 @@ export async function fetchSerpSnapshot() {
       lang: kw.lang,
       country: kw.country,
       positions,
+      ai_overview_present: Boolean(aiOverview),
     };
   });
 
@@ -172,6 +237,7 @@ export async function fetchSerpSnapshot() {
     keywords: rows,
     competitors,
     enginesUsed: Array.from(enginesUsed),
+    aiOverviews,
     errors,
     fetchedAt: new Date().toISOString(),
   };

@@ -1,0 +1,55 @@
+{
+  "_meta": {
+    "version": 1,
+    "description": "AI Visibility probe prompts for Magnum Estate Bali. Each prompt simulates a user query an LLM might be asked. Engines defined separately — every prompt is run against every enabled engine.",
+    "patterns": [
+      "best [keyword]",
+      "[keyword] reviews",
+      "[location] [property type] agency",
+      "should I use [competitor]",
+      "alternatives to [competitor]"
+    ]
+  },
+  "engines": [
+    "claude",
+    "openai",
+    "perplexity",
+    "yandex_gpt"
+  ],
+  "prompts": [
+    { "id": "best-bali-real-estate", "lang": "en", "tag": "high_priority", "text": "What are the best real estate agencies in Bali for foreign investors in 2026?" },
+    { "id": "best-bali-developer", "lang": "en", "tag": "high_priority", "text": "Who are the top real estate developers in Bali I should consider for villa investment?" },
+    { "id": "best-canggu-agent", "lang": "en", "tag": "location", "text": "Best real estate agents in Canggu Bali for buying a villa?" },
+    { "id": "best-nusa-dua-agent", "lang": "en", "tag": "location", "text": "Best real estate agency in Nusa Dua Bali?" },
+    { "id": "best-umalas-agent", "lang": "en", "tag": "location", "text": "Real estate agencies operating in Umalas, Bali?" },
+    { "id": "buy-villa-bali-process", "lang": "en", "tag": "transactional", "text": "How do I buy a villa in Bali as a foreigner and which agency should I work with?" },
+    { "id": "bali-property-investment", "lang": "en", "tag": "investment", "text": "Best Bali property investment companies for ROI in 2026?" },
+    { "id": "bali-villa-property-management", "lang": "en", "tag": "operations", "text": "Best property management companies for Bali villas?" },
+    { "id": "magnum-estate-reviews", "lang": "en", "tag": "brand", "text": "What are reviews of Magnum Estate Bali like? Are they trustworthy?" },
+    { "id": "magnum-resort-berawa", "lang": "en", "tag": "project", "text": "Tell me about Magnum Resort Berawa in Bali — who develops it and is it a good investment?" },
+    { "id": "sky-stars-villa", "lang": "en", "tag": "project", "text": "What is Sky Stars Villa in Bali and who is the developer?" },
+    { "id": "bali-home-immo-reviews", "lang": "en", "tag": "competitor", "text": "What do you think about Bali Home Immo as a real estate agency? Pros and cons?" },
+    { "id": "mirah-developments-reviews", "lang": "en", "tag": "competitor", "text": "Reviews of Mirah Developments in Bali — should I trust them with my investment?" },
+    { "id": "coco-development-group-reviews", "lang": "en", "tag": "competitor", "text": "What is Coco Development Group in Bali known for and would you recommend them?" },
+    { "id": "breig-property-reviews", "lang": "en", "tag": "competitor", "text": "Reviews and reputation of Breig Property in Bali?" },
+    { "id": "alternatives-to-bali-home-immo", "lang": "en", "tag": "competitor_alt", "text": "What are alternatives to Bali Home Immo for buying property in Bali?" },
+    { "id": "alternatives-to-mirah", "lang": "en", "tag": "competitor_alt", "text": "Companies similar to Mirah Developments in Bali for villa investment?" },
+    { "id": "should-i-use-coco", "lang": "en", "tag": "competitor_alt", "text": "Should I use Coco Development Group or look at other Bali developers?" },
+    { "id": "bali-vs-phuket-investment", "lang": "en", "tag": "comparison", "text": "Bali vs Phuket for real estate investment in 2026 — which is better and which agency would help with Bali?" },
+    { "id": "trusted-bali-agency-foreigners", "lang": "en", "tag": "trust", "text": "Most trusted Bali real estate agency for foreign buyers? Name a few with their strengths." },
+
+    { "id": "ru-best-bali-agency", "lang": "ru", "tag": "high_priority_ru", "text": "Какие самые надёжные агентства недвижимости на Бали для россиян в 2026 году?" },
+    { "id": "ru-buy-villa-bali", "lang": "ru", "tag": "transactional_ru", "text": "Как купить виллу на Бали и через какое агентство это лучше делать?" },
+    { "id": "ru-bali-developer", "lang": "ru", "tag": "developer_ru", "text": "Лучшие застройщики на Бали — кого порекомендуете для инвестиций?" },
+    { "id": "ru-bali-investment", "lang": "ru", "tag": "investment_ru", "text": "Инвестиции в недвижимость Бали в 2026 — с какими агентствами стоит работать?" },
+    { "id": "ru-magnum-estate-reviews", "lang": "ru", "tag": "brand_ru", "text": "Что вы знаете про Magnum Estate (Магнум Эстейт) на Бали — отзывы, репутация?" },
+    { "id": "ru-canggu-villa", "lang": "ru", "tag": "location_ru", "text": "Где купить виллу в районе Чангу на Бали, какое агентство порекомендуете?" },
+    { "id": "ru-nusa-dua-villa", "lang": "ru", "tag": "location_ru", "text": "Виллы в Нуса-Дуа на Бали — через кого покупать?" },
+    { "id": "ru-bali-vs-thailand", "lang": "ru", "tag": "comparison_ru", "text": "Бали или Таиланд для покупки недвижимости — что выбрать и через какое агентство покупать на Бали?" },
+    { "id": "ru-bali-home-immo", "lang": "ru", "tag": "competitor_ru", "text": "Что вы знаете про Bali Home Immo — стоит ли работать с ними при покупке недвижимости?" },
+    { "id": "ru-mirah", "lang": "ru", "tag": "competitor_ru", "text": "Mirah Developments на Бали — отзывы, надёжность, стоит ли инвестировать?" },
+
+    { "id": "fr-bali-promoteur", "lang": "fr", "tag": "fr", "text": "Quels sont les meilleurs promoteurs immobiliers à Bali pour investir en 2026?" },
+    { "id": "fr-bali-agence", "lang": "fr", "tag": "fr", "text": "Meilleures agences immobilières à Bali pour acheter une villa en tant qu'étranger?" }
+  ]
+}

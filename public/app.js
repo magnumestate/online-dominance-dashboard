@@ -27,7 +27,7 @@ const messages = {
     "topbar.light": "Light",
 
     "hero.subhead":
-      "Сводный показатель присутствия Magnum Estate в digital-канале. Объединяет органический поиск, позиции против конкурентов, конверсию и исполнение SEO-стратегии в одну величину.",
+      "Сводный показатель присутствия Magnum Estate в digital и AI-канале. Web Dominance объединяет органический поиск, позиции против конкурентов, конверсию и SEO-исполнение. AI Visibility измеряет долю бренда в ответах ChatGPT, Claude, Perplexity и YandexGPT на ключевые prompt-семьи.",
     "hero.currentValue": "Текущее значение",
     "hero.scaleHint": "100 = стабильность · 130+ = доминирование",
     "hero.period": "PERIOD",
@@ -150,7 +150,7 @@ const messages = {
     "topbar.light": "Light",
 
     "hero.subhead":
-      "Aggregate measure of Magnum Estate's digital presence. Combines organic search, positions vs competitors, conversion, and SEO execution into one number.",
+      "Aggregate measure of Magnum Estate's digital and AI presence. Web Dominance combines organic search, positions vs competitors, conversion, and SEO execution. AI Visibility tracks brand share-of-voice in ChatGPT, Claude, Perplexity and YandexGPT responses to tracked prompt families.",
     "hero.currentValue": "Current value",
     "hero.scaleHint": "100 = stable · 130+ = dominating",
     "hero.period": "PERIOD",
@@ -353,6 +353,29 @@ const heroMetaPrev = document.getElementById("heroMetaPrev");
 const dominanceScore = document.getElementById("dominanceScore");
 const dominanceStatus = document.getElementById("dominanceStatus");
 const dominanceFill = document.getElementById("dominanceFill");
+const totalDominanceScore = document.getElementById("totalDominanceScore");
+const totalDominanceStatus = document.getElementById("totalDominanceStatus");
+const totalDominanceSpark = document.getElementById("totalDominanceSpark");
+const totalDominanceFoot = document.getElementById("totalDominanceFoot");
+const webDominanceSpark = document.getElementById("webDominanceSpark");
+const aiVisibilityScoreEl = document.getElementById("aiVisibilityScore");
+const aiVisibilityStatusEl = document.getElementById("aiVisibilityStatus");
+const aiVisibilitySpark = document.getElementById("aiVisibilitySpark");
+const aiVisibilityFoot = document.getElementById("aiVisibilityFoot");
+
+const aiState = document.getElementById("aiState");
+const aiSovValue = document.getElementById("aiSovValue");
+const aiSovMeta = document.getElementById("aiSovMeta");
+const aiMentionsValue = document.getElementById("aiMentionsValue");
+const aiMentionsMeta = document.getElementById("aiMentionsMeta");
+const aiCitedValue = document.getElementById("aiCitedValue");
+const aiCitedMeta = document.getElementById("aiCitedMeta");
+const aiPositiveValue = document.getElementById("aiPositiveValue");
+const aiPositiveMeta = document.getElementById("aiPositiveMeta");
+const aioState = document.getElementById("aioState");
+const aioStats = document.getElementById("aioStats");
+const aioCards = document.getElementById("aioCards");
+const aiOpportunitiesList = document.getElementById("aiOpportunitiesList");
 const trafficChart = document.getElementById("trafficChart");
 const engagementChart = document.getElementById("engagementChart");
 const diTrendChart = document.getElementById("diTrendChart");
@@ -1188,6 +1211,168 @@ function formatCompactCurrency(n) {
   return numberFormat.format(n);
 }
 
+function statusSlug(status) {
+  return String(status || "")
+    .toLowerCase()
+    .replace(/[^a-z]+/g, "-")
+    .replace(/^-|-$/g, "") || "unknown";
+}
+
+function applyStatusClass(el, baseClass, status) {
+  el.className = `${baseClass} status-${statusSlug(status)}`;
+}
+
+function renderHeroDominance(data) {
+  const web = data.dominance || {};
+  const ai = data.aiVisibility || {};
+  const total = data.totalDominance || {};
+
+  totalDominanceScore.textContent = total.index != null ? total.index : "—";
+  totalDominanceStatus.textContent = total.status || "—";
+  applyStatusClass(totalDominanceStatus, "dominance-status", total.status);
+  if (total.weights) {
+    totalDominanceFoot.textContent = `web ${Math.round(total.weights.web * 100)}% · ai ${Math.round(total.weights.ai * 100)}%`;
+  }
+
+  dominanceScore.textContent = web.index != null ? web.index : "—";
+  dominanceStatus.textContent = web.status || "—";
+  applyStatusClass(dominanceStatus, "dominance-status", web.status);
+  const fillWidth = web.index != null ? Math.min(web.index, 160) / 160 : 0;
+  if (dominanceFill) dominanceFill.style.width = `${Math.round(fillWidth * 100)}%`;
+
+  aiVisibilityScoreEl.textContent = ai.index != null ? ai.index : "—";
+  aiVisibilityStatusEl.textContent = ai.status || "—";
+  applyStatusClass(aiVisibilityStatusEl, "dominance-status", ai.status);
+  if (ai.stats && ai.stats.totalResponses > 0) {
+    const sov = ai.stats.sov_pct != null ? `SOV ${(ai.stats.sov_pct * 100).toFixed(0)}%` : "SOV —";
+    aiVisibilityFoot.textContent = `${sov} · ${ai.stats.brandMentioned || 0} mentions · ${ai.stats.brandCited || 0} cited`;
+  } else {
+    aiVisibilityFoot.textContent = "Нет AI-данных за эту неделю";
+  }
+
+  const totalHistory = (data.totalDominanceHistory || []).map((h) => h.index).filter((v) => v != null);
+  const webHistory = (data.dominanceHistory || []).map((h) => h.index).filter((v) => v != null);
+  const aiHistory = (data.aiVisibilityHistory || []).map((h) => h.ai_visibility_score).filter((v) => v != null);
+
+  renderSparkline(totalDominanceSpark, totalHistory.length >= 2 ? totalHistory : webHistory, "#e1c282");
+  renderSparkline(webDominanceSpark, webHistory, "#c9a96e");
+  renderSparkline(aiVisibilitySpark, aiHistory, "#7fb3d5");
+}
+
+function renderAiVisibilitySection(data) {
+  const ai = data.aiVisibility || {};
+  const sources = data.sources || {};
+  const aip = sources.aiProbe || {};
+
+  if (!aip.configured) {
+    setTag(aiState, "AI probe не подключён (нет API-ключей)", "warn");
+  } else if (ai.index == null) {
+    setTag(aiState, `${aip.engines.join(", ")} · нет данных за эту неделю`, "warn");
+  } else {
+    setTag(aiState, `${aip.engines.join(", ")} · ${aip.responsesThisWeek} ответов · score ${ai.index}`, "ok");
+  }
+
+  const stats = ai.stats || {};
+  aiSovValue.textContent = stats.sov_pct != null ? `${(stats.sov_pct * 100).toFixed(1)}%` : "—";
+  aiSovMeta.textContent = stats.totalResponses
+    ? `${stats.brandMentioned || 0} brand mentions из ${stats.totalResponses} ответов`
+    : "—";
+
+  aiMentionsValue.textContent = numberFormat.format(stats.brandMentioned || 0);
+  aiMentionsMeta.textContent = stats.totalResponses ? `всего ответов: ${stats.totalResponses}` : "—";
+
+  aiCitedValue.textContent = numberFormat.format(stats.brandCited || 0);
+  aiCitedMeta.textContent = stats.brandMentioned
+    ? `${Math.round(((stats.brandCited || 0) / stats.brandMentioned) * 100)}% от упоминаний`
+    : "—";
+
+  const classifiedCount = stats.classifiedCount || 0;
+  if (classifiedCount > 0 && ai.breakdown?.components?.positive != null) {
+    const positiveRatio = ai.breakdown.components.positive / 2;
+    aiPositiveValue.textContent = `${(positiveRatio * 100).toFixed(0)}%`;
+    aiPositiveMeta.textContent = `${classifiedCount} ответов классифицировано Haiku 4.5`;
+  } else {
+    aiPositiveValue.textContent = "—";
+    aiPositiveMeta.textContent = sources.aiClassifier?.configured
+      ? "Sentiment не запускался ещё"
+      : "Classifier не настроен (нет ANTHROPIC_API_KEY)";
+  }
+
+  renderAiOverviews(data.aiOverviews);
+  renderAiOpportunities(data);
+}
+
+function renderAiOverviews(aio) {
+  aioStats.innerHTML = "";
+  aioCards.innerHTML = "";
+  if (!aio || aio.totalKeywords === 0) {
+    setTag(aioState, "SERP snapshot не загружен", "muted");
+    return;
+  }
+  setTag(aioState,
+    `${aio.presentCount}/${aio.totalKeywords} keywords with AI Overview · ${aio.brandCitedCount} cite Magnum`,
+    aio.brandCitedRate >= 0.3 ? "ok" : "warn"
+  );
+
+  const tile = (label, value, sub) => {
+    const div = document.createElement("div");
+    div.className = "aio-stat-tile";
+    div.innerHTML = `
+      <span class="aio-stat-label">${label}</span>
+      <span class="aio-stat-value">${value}</span>
+      <span class="aio-stat-sub">${sub}</span>
+    `;
+    return div;
+  };
+  aioStats.appendChild(tile("Presence rate", `${Math.round(aio.presenceRate * 100)}%`, `${aio.presentCount}/${aio.totalKeywords} keywords`));
+  aioStats.appendChild(tile("Brand cited", aio.brandCitedCount, aio.presentCount ? `${Math.round(aio.brandCitedRate * 100)}% of AI Overviews` : "—"));
+  aioStats.appendChild(tile("Threats", aio.threats.length, "competitor cited, we are not"));
+  aioStats.appendChild(tile("Blue ocean", aio.blueOcean.length, "AI Overview present, nobody cited"));
+
+  const renderCardSet = (title, items, kind, formatter) => {
+    if (!items.length) return;
+    const card = document.createElement("div");
+    card.className = `aio-card aio-${kind}`;
+    const lis = items.slice(0, 5).map((it) => `<li>${formatter(it)}</li>`).join("");
+    card.innerHTML = `<div class="aio-card-title">${title}</div><ol class="aio-list">${lis}</ol>`;
+    aioCards.appendChild(card);
+  };
+  renderCardSet("Где Magnum цитируют", aio.ourWins, "wins",
+    (it) => `<span class="aio-kw">${escapeHtml(it.keyword)}</span><span class="aio-meta">${it.engine}/${it.lang}${it.alongsideCompetitors?.length ? ` · vs ${it.alongsideCompetitors.length}` : " · solo"}</span>`);
+  renderCardSet("Угрозы (конкуренты цитируются, мы — нет)", aio.threats, "threats",
+    (it) => `<span class="aio-kw">${escapeHtml(it.keyword)}</span><span class="aio-meta">${it.engine}/${it.lang} · ${(it.competitors || []).length} comp.</span>`);
+  renderCardSet("Blue ocean (AI Overview есть, никто не цитирован)", aio.blueOcean, "blue",
+    (it) => `<span class="aio-kw">${escapeHtml(it.keyword)}</span><span class="aio-meta">${it.engine}/${it.lang}</span>`);
+}
+
+function renderAiOpportunities(data) {
+  aiOpportunitiesList.innerHTML = "";
+  const aiResponses = data.aiVisibility?.stats?.totalResponses || 0;
+  if (aiResponses === 0) {
+    aiOpportunitiesList.innerHTML = "<li class='ai-opp-empty'>Нет данных. Запустите /api/snapshot после настройки ANTHROPIC_API_KEY (и при желании OPENAI/PERPLEXITY/YANDEX).</li>";
+    return;
+  }
+  const aio = data.aiOverviews;
+  const items = aio?.threats?.slice(0, 5) || [];
+  if (items.length === 0) {
+    aiOpportunitiesList.innerHTML = "<li class='ai-opp-empty'>Конкуренты пока не доминируют в AI Overviews.</li>";
+    return;
+  }
+  for (const it of items) {
+    const li = document.createElement("li");
+    li.className = "ai-opp-item";
+    li.innerHTML = `
+      <span class="ai-opp-kw">${escapeHtml(it.keyword)}</span>
+      <span class="ai-opp-meta">${it.engine}/${it.lang} · конкуренты в AI Overview: ${(it.competitors || []).length}</span>
+    `;
+    aiOpportunitiesList.appendChild(li);
+  }
+}
+
+function escapeHtml(s) {
+  return String(s || "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
 function renderBitrix(bitrix) {
   if (!bitrix?.leads?.current) {
     setTag(bitrixState, "Bitrix не подключен", "muted");
@@ -1306,6 +1491,8 @@ function renderSourceStatus(sources) {
     seoProgress: "SEO Progress (Sheets)",
     bitrix: "Bitrix24 CRM",
     briefing: "Executive Brief (LLM)",
+    aiProbe: "AI Probe (LLM APIs)",
+    aiClassifier: "AI Classifier (Haiku 4.5)",
   };
   Object.entries(sources).forEach(([key, info]) => {
     const li = document.createElement("li");
@@ -1350,15 +1537,7 @@ function renderDashboard(data) {
   renderSparkline(engagementSpark, series.map((s) => s.engagementRate), "#84b685");
   renderSparkline(reachSpark, series.map((s) => s.totalUsers), "#c9a96e");
 
-  dominanceScore.textContent = data.dominance.index;
-  dominanceStatus.textContent = data.dominance.status;
-  const statusSlug = String(data.dominance.status || "")
-    .toLowerCase()
-    .replace(/[^a-z]+/g, "-")
-    .replace(/^-|-$/g, "");
-  dominanceStatus.className = `dominance-status status-${statusSlug || "unknown"}`;
-  const fillWidth = Math.min(data.dominance.index, 160) / 160;
-  dominanceFill.style.width = `${Math.round(fillWidth * 100)}%`;
+  renderHeroDominance(data);
 
   const periodDays = periodLength(data.meta.startDate, data.meta.endDate);
   if (heroMetaPeriod) {
@@ -1379,6 +1558,7 @@ function renderDashboard(data) {
   renderIntersection(data.gsc, data.serp);
   renderSeoProgress(data.seoProgress);
   renderDominanceTrend(data.dominanceHistory, data.dominance.index);
+  renderAiVisibilitySection(data);
   renderSourceStatus(data.sources);
   renderBitrix(data.bitrix);
   renderBriefing(data.briefing);

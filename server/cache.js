@@ -31,8 +31,35 @@ function getDb() {
       model TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+    CREATE TABLE IF NOT EXISTS ai_visibility_responses (
+      id INTEGER PRIMARY KEY,
+      ts TEXT NOT NULL,
+      week_start TEXT NOT NULL,
+      prompt_id TEXT NOT NULL,
+      prompt_text TEXT NOT NULL,
+      engine TEXT NOT NULL,
+      lang TEXT NOT NULL,
+      brand_mentioned INTEGER NOT NULL DEFAULT 0,
+      brand_cited INTEGER NOT NULL DEFAULT 0,
+      competitors_mentioned TEXT NOT NULL DEFAULT '[]',
+      sentiment TEXT,
+      intent TEXT,
+      response_hash TEXT NOT NULL,
+      raw_excerpt TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_avr_week ON ai_visibility_responses(week_start);
+    CREATE INDEX IF NOT EXISTS idx_avr_prompt ON ai_visibility_responses(prompt_id, ts);
+    CREATE INDEX IF NOT EXISTS idx_avr_engine ON ai_visibility_responses(engine, lang);
   `);
   return db;
+}
+
+export function weekStart(date = new Date()) {
+  const d = new Date(date);
+  const day = d.getUTCDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setUTCDate(d.getUTCDate() + diff);
+  return d.toISOString().slice(0, 10);
 }
 
 function today() {
@@ -114,4 +141,46 @@ export function readLatestBriefing() {
     model: row.model,
     ...JSON.parse(row.content),
   };
+}
+
+export function writeAiResponses(rows) {
+  if (!rows?.length) return 0;
+  const stmt = getDb().prepare(`
+    INSERT INTO ai_visibility_responses
+      (ts, week_start, prompt_id, prompt_text, engine, lang,
+       brand_mentioned, brand_cited, competitors_mentioned,
+       sentiment, intent, response_hash, raw_excerpt)
+    VALUES (@ts, @week_start, @prompt_id, @prompt_text, @engine, @lang,
+            @brand_mentioned, @brand_cited, @competitors_mentioned,
+            @sentiment, @intent, @response_hash, @raw_excerpt)
+  `);
+  const insertMany = getDb().transaction((items) => {
+    for (const item of items) stmt.run(item);
+  });
+  insertMany(rows);
+  return rows.length;
+}
+
+export function readAiResponsesForWeek(week) {
+  return getDb()
+    .prepare("SELECT * FROM ai_visibility_responses WHERE week_start = ? ORDER BY engine, lang, prompt_id")
+    .all(week);
+}
+
+export function findCachedResponse(promptId, engine, week) {
+  return getDb()
+    .prepare("SELECT * FROM ai_visibility_responses WHERE prompt_id = ? AND engine = ? AND week_start = ? LIMIT 1")
+    .get(promptId, engine, week);
+}
+
+export function aiVisibilityHistory(weeks = 12) {
+  return getDb()
+    .prepare(`
+      SELECT date, payload FROM snapshots
+      WHERE type = 'ai-visibility-week'
+      ORDER BY date DESC LIMIT ?
+    `)
+    .all(weeks)
+    .map((r) => ({ date: r.date, ...JSON.parse(r.payload) }))
+    .reverse();
 }

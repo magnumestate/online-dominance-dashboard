@@ -10,8 +10,12 @@ import * as serp from "./sources/serp.js";
 import * as seoProgress from "./sources/seo-progress.js";
 import * as bitrix from "./sources/bitrix.js";
 import * as briefing from "./briefing.js";
-import { dominanceIndex } from "./score.js";
+import * as aiProbe from "./sources/ai-probe.js";
+import * as aiClassifier from "./sources/ai-classifier.js";
+import { summarizeAiOverviews } from "./sources/ai-overviews.js";
+import { dominanceIndex, aiVisibilityScore, totalDominance } from "./score.js";
 import { diffSerp } from "./diff.js";
+import { generateWeeklyBrief } from "./brief.js";
 import {
   writeSnapshot,
   readLatestSnapshot,
@@ -20,9 +24,13 @@ import {
   dominanceHistory,
   recordBriefing,
   readLatestBriefing,
+  weekStart,
+  writeAiResponses,
+  readAiResponsesForWeek,
+  aiVisibilityHistory,
 } from "./cache.js";
 
-dotenv.config();
+dotenv.config({ override: true });
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -42,6 +50,9 @@ app.get("/api/health", (_req, res) => {
       seoProgress: seoProgress.isConfigured(),
       bitrix: bitrix.isConfigured(),
       briefing: briefing.isConfigured(),
+      aiProbe: aiProbe.isConfigured(),
+      aiProbeEngines: aiProbe.enabledEngines(),
+      aiClassifier: aiClassifier.isConfigured(),
     },
   });
 });
@@ -135,6 +146,17 @@ app.get("/api/dashboard", async (req, res) => {
       }
     })();
 
+    const currentWeek = weekStart();
+    const aiHistory = (() => {
+      try { return aiVisibilityHistory(12); } catch { return []; }
+    })();
+    const aiResponsesThisWeek = (() => {
+      try { return readAiResponsesForWeek(currentWeek); } catch { return []; }
+    })();
+    const ai = aiVisibilityScore({ responses: aiResponsesThisWeek, history: aiHistory });
+    const aiOverviewsSummary = serpData ? summarizeAiOverviews(serpData) : null;
+    const totalDom = totalDominance({ webIndex: dominance.index, aiIndex: ai.index });
+
     const meta = ga4Data?.meta || {
       startDate,
       endDate,
@@ -172,6 +194,10 @@ app.get("/api/dashboard", async (req, res) => {
       dominance,
       dominanceHistory: history,
       briefing: readLatestBriefing(),
+      aiVisibility: ai,
+      aiVisibilityHistory: aiHistory,
+      aiOverviews: aiOverviewsSummary,
+      totalDominance: totalDom,
       sources: {
         ga4: { configured: ga4.isConfigured(), ok: byLabel.ga4?.ok ?? false, error: byLabel.ga4?.error },
         gsc: { configured: gsc.isConfigured(), ok: byLabel.gsc?.ok ?? false, error: byLabel.gsc?.error },
@@ -179,6 +205,8 @@ app.get("/api/dashboard", async (req, res) => {
         seoProgress: { configured: seoProgress.isConfigured(), cached: Boolean(seoCached), date: seoCached?.date },
         bitrix: { configured: bitrix.isConfigured(), ok: byLabel.bitrix?.ok ?? false, error: byLabel.bitrix?.error },
         briefing: { configured: briefing.isConfigured() },
+        aiProbe: { configured: aiProbe.isConfigured(), engines: aiProbe.enabledEngines(), responsesThisWeek: aiResponsesThisWeek.length },
+        aiClassifier: { configured: aiClassifier.isConfigured() },
       },
     });
   } catch (error) {
@@ -345,6 +373,20 @@ app.post("/api/snapshot", async (req, res) => {
       previousStartDate: prev.startDate, previousEndDate: prev.endDate,
     })));
   }
+  if (aiProbe.isConfigured()) {
+    tasks.push(settled("ai-probe", (async () => {
+      const probed = await aiProbe.runProbes({ force: req.query.force === "1" });
+      const classified = await aiClassifier.classifyResponses({ rows: probed.rows });
+      const written = writeAiResponses(classified);
+      return {
+        engines: probed.engines,
+        responsesNew: written,
+        responsesCached: probed.cached || 0,
+        errors: probed.errors,
+        weekStart: probed.weekStart,
+      };
+    })()));
+  }
 
   const results = await Promise.all(tasks);
   const summary = {};
@@ -356,6 +398,7 @@ app.post("/api/snapshot", async (req, res) => {
     if (r.ok && r.label === "ga4") writeSnapshot("ga4-totals", { totals: r.data.totals, previousTotals: r.data.previousTotals });
     if (r.ok && r.label === "gsc") writeSnapshot("gsc-totals", { totals: r.data.totals, previousTotals: r.data.previousTotals, brandSplit: r.data.brandSplit });
     if (r.ok && r.label === "bitrix") writeSnapshot("bitrix", r.data);
+    if (r.ok && r.label === "ai-probe") summary["ai-probe"] = { ...summary["ai-probe"], ...r.data };
   }
 
   const byLabel = Object.fromEntries(results.map((r) => [r.label, r]));
@@ -371,10 +414,26 @@ app.post("/api/snapshot", async (req, res) => {
       : readLatestSnapshot("bitrix")?.payload,
   });
 
+  const currentWeek = weekStart();
+  const aiResponses = readAiResponsesForWeek(currentWeek);
+  const aiHistory = aiVisibilityHistory(12);
+  const ai = aiVisibilityScore({ responses: aiResponses, history: aiHistory });
+
+  if (ai.index != null) {
+    writeSnapshot("ai-visibility-week", {
+      sov_pct: ai.stats.sov_pct,
+      mentions_total: ai.stats.brandMentioned,
+      mentions_cited: ai.stats.brandCited,
+      ai_visibility_score: ai.index,
+      breakdown: ai.breakdown,
+      stats: ai.stats,
+    }, currentWeek);
+  }
+
+  const totalDom = totalDominance({ webIndex: dominance.index, aiIndex: ai.index });
+
   recordDominance(dominance);
 
-  // Generate weekly LLM briefing from this snapshot's data.
-  // Fail-soft: if briefing errors, the rest of the snapshot still completed.
   if (briefing.isConfigured()) {
     try {
       const ga4Data = byLabel.ga4?.ok ? byLabel.ga4.data : null;
@@ -415,8 +474,54 @@ app.post("/api/snapshot", async (req, res) => {
     summary.briefing = { ok: false, error: "ANTHROPIC_API_KEY not configured" };
   }
 
-  res.json({ ok: true, index: dominance.index, status: dominance.status, summary });
+  res.json({
+    ok: true,
+    webDominance: { index: dominance.index, status: dominance.status },
+    aiVisibility: { index: ai.index, status: ai.status, stats: ai.stats },
+    totalDominance: { index: totalDom.index, status: totalDom.status, weights: totalDom.weights },
+    summary,
+  });
 });
+
+app.post("/api/brief/weekly", async (req, res) => {
+  const token = process.env.SNAPSHOT_TOKEN;
+  if (!token) return res.status(500).json({ error: "SNAPSHOT_TOKEN not set" });
+  if (req.headers.authorization !== `Bearer ${token}`) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    const result = await generateWeeklyBrief({
+      persist: req.query.dryRun !== "1",
+      dashboardUrl: process.env.DASHBOARD_URL,
+    });
+    res.json({ ok: true, week: result.week, file: result.file || null, length: result.markdown.length });
+  } catch (err) {
+    console.error("[brief]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/briefs", async (_req, res) => {
+  try {
+    const fs = await import("node:fs/promises");
+    const dir = path.join(process.cwd(), "briefs");
+    try {
+      const entries = await fs.readdir(dir);
+      const briefs = entries
+        .filter((f) => f.endsWith(".md"))
+        .sort()
+        .reverse()
+        .map((f) => ({ week: f.replace(/\.md$/, ""), path: `/briefs/${f}` }));
+      res.json({ briefs });
+    } catch {
+      res.json({ briefs: [] });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.use("/briefs", express.static(path.join(process.cwd(), "briefs")));
 
 app.listen(port, () => {
   console.log(`Dashboard running on http://localhost:${port}`);
