@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bali Real Estate Dominance</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="ambient"></div>
+    <div class="app">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Bali Real Estate</p>
+          <h1>Dominance Dashboard</h1>
+          <p class="subhead">
+            Единый контроль трафика, лидов, вовлеченности и охвата из GA4 с индексом
+            доминирования бренда.
+          </p>
+        </div>
+        <div class="dominance-card">
+          <div class="dominance-label">Индекс доминирования</div>
+          <div class="dominance-score" id="dominanceScore">—</div>
+          <div class="dominance-status" id="dominanceStatus">—</div>
+          <div class="dominance-bar">
+            <div class="dominance-fill" id="dominanceFill"></div>
+          </div>
+          <div class="dominance-foot">100 = стабильность, 120+ = доминирование</div>
+        </div>
+      </header>
+
+      <section class="controls">
+        <div class="control">
+          <label>Начало периода</label>
+          <input type="date" id="startDate" />
+        </div>
+        <div class="control">
+          <label>Конец периода</label>
+          <input type="date" id="endDate" />
+        </div>
+        <div class="control">
+          <label>Гранулярность</label>
+          <select id="granularity">
+            <option value="day">Дни</option>
+            <option value="week">Недели</option>
+            <option value="month">Месяцы</option>
+          </select>
+        </div>
+        <div class="control">
+          <label>Каналы</label>
+          <select id="channelGroup">
+            <option value="all">Все источники</option>
+            <option value="social">Социальные (organic + paid)</option>
+            <option value="organic-social">Organic Social</option>
+            <option value="paid-social">Paid Social</option>
+            <option value="organic">Organic Search</option>
+            <option value="paid-search">Paid Search</option>
+            <option value="referral">Referral</option>
+          </select>
+        </div>
+        <button id="applyFilters">Обновить</button>
+      </section>
+
+      <section class="metrics">
+        <article class="metric-card">
+          <h3>Трафик</h3>
+          <div class="metric-value" id="sessionsValue">—</div>
+          <p class="metric-caption">Сеансы за период</p>
+        </article>
+        <article class="metric-card">
+          <h3>Лиды</h3>
+          <div class="metric-value" id="leadsValue">—</div>
+          <p class="metric-caption">События Lead Generation</p>
+        </article>
+        <article class="metric-card">
+          <h3>Вовлеченность</h3>
+          <div class="metric-value" id="engagementValue">—</div>
+          <p class="metric-caption">Engagement rate</p>
+        </article>
+        <article class="metric-card">
+          <h3>Охват</h3>
+          <div class="metric-value" id="reachValue">—</div>
+          <p class="metric-caption">Уникальные пользователи</p>
+        </article>
+      </section>
+
+      <section class="source-section">
+        <div class="section-header">
+          <div>
+            <h2>Источники трафика</h2>
+            <p>Точные source / medium из GA4 с лидами и вовлеченностью.</p>
+          </div>
+          <span id="sourceCount">—</span>
+        </div>
+        <div class="source-table-wrap">
+          <table class="source-table">
+            <thead>
+              <tr>
+                <th>Источник</th>
+                <th>Medium</th>
+                <th>Канал</th>
+                <th>Сеансы</th>
+                <th>Пользователи</th>
+                <th>Лиды</th>
+                <th>Lead rate</th>
+                <th>Вовлеченность</th>
+              </tr>
+            </thead>
+            <tbody id="sourceTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="charts">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Трафик vs Лиды</h3>
+            <span class="chart-meta" id="periodLabel">—</span>
+          </div>
+          <div class="chart" id="trafficChart"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Вовлеченность</h3>
+            <span class="chart-meta">Engagement rate</span>
+          </div>
+          <div class="chart" id="engagementChart"></div>
+        </div>
+      </section>
+
+      <section class="insights">
+        <div class="insight-card">
+          <h3>Как считается индекс</h3>
+          <p>
+            Индекс доминирования сравнивает текущий период с предыдущим такой же длины
+            и взвешивает рост по трафику, лидам, вовлеченности и охвату.
+          </p>
+          <div class="weights">
+            <div>Трафик: 35%</div>
+            <div>Лиды: 35%</div>
+            <div>Вовлеченность: 20%</div>
+            <div>Охват: 10%</div>
+          </div>
+        </div>
+        <div class="insight-card">
+          <h3>Lead Generation события</h3>
+          <ul id="leadEventsList"></ul>
+        </div>
+        <div class="insight-card">
+          <h3>Активности (все события)</h3>
+          <ul id="activityList"></ul>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <span>Источник: Google Analytics 4</span>
+        <span id="previousPeriod">—</span>
+      </footer>
+    </div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
