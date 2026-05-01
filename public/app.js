@@ -519,8 +519,6 @@ const bitrixJunkRate = document.getElementById("bitrixJunkRate");
 const bitrixDealsOpen = document.getElementById("bitrixDealsOpen");
 const bitrixDealsDelta = document.getElementById("bitrixDealsDelta");
 const bitrixDealsBreakdown = document.getElementById("bitrixDealsBreakdown");
-const bitrixPipelineValue = document.getElementById("bitrixPipelineValue");
-const bitrixPipelineDelta = document.getElementById("bitrixPipelineDelta");
 const bitrixSourcesBody = document.getElementById("bitrixSourcesBody");
 
 const briefingState = document.getElementById("briefingState");
@@ -1508,10 +1506,9 @@ function aggregateBitrixSources(sources) {
 function renderBitrix(bitrix) {
   if (!bitrix?.leads?.current) {
     setTag(bitrixState, t("sales.notConnected"), "muted");
-    [
-      bitrixLeadsTotal, bitrixQualified, bitrixDealsOpen, bitrixPipelineValue,
-    ].forEach((el) => (el.textContent = "—"));
-    [bitrixLeadsDelta, bitrixQualifiedDelta, bitrixDealsDelta, bitrixPipelineDelta]
+    [bitrixLeadsTotal, bitrixQualified, bitrixDealsOpen]
+      .forEach((el) => (el.textContent = "—"));
+    [bitrixLeadsDelta, bitrixQualifiedDelta, bitrixDealsDelta]
       .forEach((el) => renderDelta(el, null));
     bitrixSourcesBody.innerHTML = "";
     bitrixJunkRate.textContent = "Junk rate —";
@@ -1538,12 +1535,9 @@ function renderBitrix(bitrix) {
   bitrixDealsOpen.textContent = numberFormat.format(dCur.in_progress || 0);
   renderDelta(bitrixDealsDelta, computeDelta(dCur.in_progress, dPrev.in_progress));
   bitrixDealsBreakdown.textContent = `Won ${dCur.won || 0} · Lost ${dCur.lost || 0}`;
-
-  bitrixPipelineValue.textContent = formatCompactCurrency(dCur.pipeline_value);
-  renderDelta(bitrixPipelineDelta, computeDelta(dCur.pipeline_value, dPrev.pipeline_value));
-  // bitrixWonValue caption removed by design — total sales digit was noise
-  // when most deals are still in progress (won_value=0). Won count is still
-  // visible on the "Deals open" card via bitrixDealsBreakdown.
+  // Pipeline metric card removed entirely — the IDR pipeline_value (40+ B)
+  // and the always-zero won_value were noise. Deals count + Won/Lost
+  // breakdown remain on the "Deals open" card.
 
   // Top sources table — aggregate by readable name, then diff vs previous
   const aggCur = aggregateBitrixSources(cur.sources);
@@ -1594,7 +1588,7 @@ function renderBitrix(bitrix) {
 }
 
 function renderBriefing(brief) {
-  if (!brief || !brief.headline) {
+  if (!brief || (!brief.headline && !brief.ru && !brief.en)) {
     setTag(briefingState, t("brief.notConfigured"), "muted");
     briefingHeadline.textContent = t("brief.placeholder");
     briefingGrew.textContent = "—";
@@ -1603,18 +1597,26 @@ function renderBriefing(brief) {
     briefingWatch.textContent = "—";
     return;
   }
+  // New bilingual shape: { ru: {...}, en: {...}, model, date, ... }.
+  // Legacy flat shape: { headline, what_grew, ..., model, date }.
+  // Prefer the lang-specific block, fall back to flat fields, fall back to ru.
+  const langBlock =
+    (currentLang === "en" && brief.en) ? brief.en :
+    (currentLang === "ru" && brief.ru) ? brief.ru :
+    brief.ru || brief.en || brief; // last resort: legacy flat fields
+
   const modelLabel = (brief.model || "Claude").replace(/^claude-/, "Claude ").replace(/-/g, " ");
   setTag(briefingState, `${modelLabel} · ${brief.date || "—"}`, "ok");
-  briefingHeadline.textContent = brief.headline;
-  briefingGrew.textContent = brief.what_grew || "—";
-  briefingSlipped.textContent = brief.what_slipped || "—";
+  briefingHeadline.textContent = langBlock.headline || "—";
+  briefingGrew.textContent = langBlock.what_grew || "—";
+  briefingSlipped.textContent = langBlock.what_slipped || "—";
   briefingActions.innerHTML = "";
-  (brief.actions || []).forEach((a) => {
+  (langBlock.actions || []).forEach((a) => {
     const li = document.createElement("li");
     li.textContent = a;
     briefingActions.appendChild(li);
   });
-  briefingWatch.textContent = brief.watch_next || "—";
+  briefingWatch.textContent = langBlock.watch_next || "—";
 }
 
 function renderSourceStatus(sources) {
