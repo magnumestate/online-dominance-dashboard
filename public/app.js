@@ -1692,11 +1692,11 @@ function renderDashboard(data) {
   renderList(activityList, data.activities, t("s07.noActivities"));
   renderSourceTable(data.trafficSources);
   renderGsc(data.gsc);
-  renderSerp(data.serp, data.serpDiff);
-  renderIntersection(data.gsc, data.serp);
-  renderSeoProgress(data.seoProgress);
+  // SERP / Outranked / SEO Progress / AI Visibility sections were removed
+  // from the dashboard. Their data sources may still flow via /api/dashboard
+  // (e.g. AI Probe still feeds the hero AI Visibility card), but the detail
+  // sections no longer render.
   renderDominanceTrend(data.dominanceHistory, data.dominance.index);
-  renderAiVisibilitySection(data);
   renderSourceStatus(data.sources);
   renderBitrix(data.bitrix);
   renderBriefing(data.briefing);
