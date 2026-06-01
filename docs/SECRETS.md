@@ -134,13 +134,11 @@ git diff --cached     # просмотри ВСЕ строки перед commit
 
 | ENV ключ | Секция дашборда | Источник в `/api/dashboard` |
 |---|---|---|
-| `GA4_PROPERTY_ID` + service-account | 01 Traffic Intelligence, 04 Acquisition | `ga4` |
-| `GSC_SITE_URL` + service-account | 02 Search Position, 03B Outranked | `gsc` |
-| `BRIGHT_DATA_API_KEY` + `_SERP_ZONE` | 03 Competitive SERP, AI Overviews в 06 | `serp` |
-| `SEO_PROGRESS_SHEET_ID` | 05 Strategic Execution | `seoProgress` |
-| `ANTHROPIC_API_KEY` | 06 AI Visibility (Probe + Classifier), 09 Executive Brief | `aiProbe`, `aiClassifier`, `briefing` |
-| `OPENAI_API_KEY` / `PERPLEXITY_API_KEY` / `YANDEX_GPT_*` | 06 AI Visibility (доп. движки) | `aiProbe` engines |
-| `BITRIX_WEBHOOK_URL` | 08 Sales Pipeline | `bitrix` |
+| `GA4_PROPERTY_ID` + service-account | 01 Traffic Intelligence, 03 Acquisition | `ga4` |
+| `GSC_SITE_URL` + service-account | 02 Search Position | `gsc` |
+| `BITRIX_WEBHOOK_URL` | 05 Sales Pipeline | `bitrix` |
+| `ANTHROPIC_API_KEY` | 06 Executive Brief + hero AI Visibility card | `aiProbe`, `aiClassifier`, `briefing` |
+| `OPENAI_API_KEY` / `PERPLEXITY_API_KEY` / `YANDEX_GPT_*` | hero AI Visibility (доп. probe движки) | `aiProbe` engines |
 | `SNAPSHOT_TOKEN` | — (cron auth) | — |
 
-Чем больше источников — тем точнее **Total Dominance Index** (composite of Web 70% + AI 30%, см. `server/score.js`).
+Web Dominance Index v2.2 объединяет 4 компоненты: non-brand growth (GSC) 40% · лиды (GA4) 25% · трафик (GA4) 20% · Bitrix pipeline 15%. AI Visibility — отдельный композит на probe-данных. Total Dominance = 0.7 × Web + 0.3 × AI (см. `server/score.js`).

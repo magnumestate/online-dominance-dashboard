@@ -1,16 +1,16 @@
 import { safeRatio } from "./utils.js";
-import { summarizeSerp } from "./sources/serp.js";
 import { salesExecutionComponent } from "./sources/bitrix.js";
 
-// v3 weights — added sales_execution as 6th component (CRM pipeline value
-// growth from Bitrix24). Other components shrunk uniformly to fit. Total = 100.
+// v2.2 weights — dropped serp_coverage and seo_execution after Bright Data
+// SERP and Google Sheets sources were disabled. The remaining 4 components
+// were rescaled to keep the total at 100, preserving the relative weight
+// of each: non-brand was 40% of the surviving weight (0.28/0.70), leads
+// 25% (0.18/0.70), traffic 20% (0.14/0.70), sales 15% (0.10/0.70).
 const WEIGHTS = {
-  nonBrandGrowth: 0.28,
-  serpCoverage: 0.22,
-  leadGrowth: 0.18,
-  trafficGrowth: 0.14,
-  seoExecution: 0.08,
-  salesExecution: 0.10,
+  nonBrandGrowth: 0.40,
+  leadGrowth:     0.25,
+  trafficGrowth:  0.20,
+  salesExecution: 0.15,
 };
 
 const AI_WEIGHTS = {
@@ -37,7 +37,7 @@ function statusFor(index) {
   return "Stable";
 }
 
-export function dominanceIndex({ ga4, gsc, serp, seoProgress, bitrix }) {
+export function dominanceIndex({ ga4, gsc, bitrix }) {
   const components = {};
   const explanations = {};
 
@@ -55,15 +55,6 @@ export function dominanceIndex({ ga4, gsc, serp, seoProgress, bitrix }) {
     explanations.nonBrandGrowth = "GSC not configured — neutral";
   }
 
-  if (serp?.keywords?.length) {
-    const summary = summarizeSerp(serp);
-    components.serpCoverage = clip(summary.share10 * 2);
-    explanations.serpCoverage = `top-10 share ${(summary.share10 * 100).toFixed(1)}% (us:${summary.ourTop10}, them:${summary.theirTop10})`;
-  } else {
-    components.serpCoverage = 1;
-    explanations.serpCoverage = "SERP not configured — neutral";
-  }
-
   if (ga4?.totals && ga4?.previousTotals) {
     components.leadGrowth = clip(safeRatio(ga4.totals.leads, ga4.previousTotals.leads));
     components.trafficGrowth = clip(safeRatio(ga4.totals.sessions, ga4.previousTotals.sessions));
@@ -74,14 +65,6 @@ export function dominanceIndex({ ga4, gsc, serp, seoProgress, bitrix }) {
     components.trafficGrowth = 1;
     explanations.leadGrowth = "GA4 not configured — neutral";
     explanations.trafficGrowth = "GA4 not configured — neutral";
-  }
-
-  if (seoProgress && seoProgress.total > 0) {
-    components.seoExecution = clip(seoProgress.pct * 2);
-    explanations.seoExecution = `${seoProgress.done}/${seoProgress.total} (${(seoProgress.pct * 100).toFixed(0)}%)`;
-  } else {
-    components.seoExecution = 1;
-    explanations.seoExecution = "SEO progress not configured — neutral";
   }
 
   if (bitrix?.deals?.current) {
