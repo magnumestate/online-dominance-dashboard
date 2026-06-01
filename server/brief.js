@@ -137,14 +137,13 @@ export async function generateWeeklyBrief({ persist = true, dashboardUrl = proce
   const serpCached = readLatestSnapshot("serp");
   const aio = serpCached?.payload ? summarizeAiOverviews(serpCached.payload) : null;
 
-  const seoCached = readLatestSnapshot("seo-progress");
   const ga4Cached = readLatestSnapshot("ga4-totals");
   const gscCached = readLatestSnapshot("gsc-totals");
+  const bitrixCached = readLatestSnapshot("bitrix");
   const web = dominanceIndex({
     ga4: ga4Cached ? { totals: ga4Cached.payload.totals, previousTotals: ga4Cached.payload.previousTotals } : null,
     gsc: gscCached?.payload || null,
-    serp: serpCached?.payload || null,
-    seoProgress: seoCached?.payload || null,
+    bitrix: bitrixCached?.payload || null,
   });
   const total = totalDominance({ webIndex: web.index, aiIndex: ai.index });
 

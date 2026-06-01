@@ -19,12 +19,6 @@ services:
         sync: false
       - key: GSC_SITE_URL
         sync: false
-      - key: SEO_PROGRESS_SHEET_ID
-        sync: false
-      - key: BRIGHT_DATA_API_KEY
-        sync: false
-      - key: BRIGHT_DATA_SERP_ZONE
-        sync: false
       - key: BITRIX_WEBHOOK_URL
         sync: false
       - key: ANTHROPIC_API_KEY

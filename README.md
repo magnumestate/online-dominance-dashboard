@@ -1,17 +1,15 @@
 # Online Dominance Dashboard
 
-Marketing intelligence для Magnum Estate — собирает GA4, Google Search Console, SERP-позиции конкурентов в Google и Yandex через Bright Data, и прогресс SEO-плана из Google Sheets в один индекс доминирования.
+Marketing intelligence для Magnum Estate — собирает GA4, Google Search Console и Bitrix24 CRM в единый Web Dominance Index, плюс AI Visibility через probe Claude.
 
 ## Что показывает
 
-- **Dominance Index 2.1** — взвешенная свёртка шести источников
+- **Web Dominance Index 2.2** — взвешенная свёртка четырёх компонент: рост non-brand, лиды, трафик, pipeline в Bitrix24
 - **GA4** — трафик, лиды, источники
 - **GSC** — clicks/impressions/CTR + brand vs non-brand split
-- **SERP-позиции** — `magnumestate.com` против 4 конкурентов по ~30 ключам в Google **и Yandex** (Bright Data SERP API, weekly)
-- **SEO progress** — % выполненных рекомендаций из контент-плана
-- **Bitrix24 CRM** — лиды (total/qualified/junk + источники), сделки (won/lost/open), стоимость pipeline
+- **Bitrix24 CRM** — лиды (total/qualified/junk + источники), сделки (won/lost/open)
 - **30-дневный тренд** индекса (snapshot-based)
-- **Executive Brief** — еженедельный LLM-нарратив (Claude Opus 4.7) с headline, что выросло, где проседаем, 3 действия, что отслеживать
+- **Executive Brief** — еженедельный LLM-нарратив (Claude Opus 4.7) на RU и EN с headline, что выросло, где проседаем, 3 действия, что отслеживать
 
 ## Запуск локально
 
@@ -44,9 +42,6 @@ curl -X POST -H "Authorization: Bearer $SNAPSHOT_TOKEN" \
 | `GA4_SERVICE_ACCOUNT_KEYFILE` | путь к JSON-ключу (используется и для GSC, и для Sheets если они не переопределены) |
 | `LEAD_EVENTS` / `ACTIVITY_EVENTS` | события GA4 для лидов / активностей (через запятую) |
 | `GSC_SITE_URL` | например `sc-domain:magnumestate.com` |
-| `BRIGHT_DATA_API_KEY` | Bearer token для Bright Data SERP API (см. https://brightdata.com/cp/setting/users) |
-| `BRIGHT_DATA_SERP_ZONE` | имя SERP-зоны из dashboard Bright Data (создаётся один раз) |
-| `SEO_PROGRESS_SHEET_ID` | ID Google Sheet с контент-планом |
 | `BITRIX_WEBHOOK_URL` | inbound webhook URL из Bitrix24 (CRM-скоуп) |
 | `SNAPSHOT_TOKEN` | bearer для защиты `/api/snapshot` |
 | `ANTHROPIC_API_KEY` | (опц.) включает еженедельный LLM-брифинг через Claude Opus 4.7 |
@@ -54,32 +49,20 @@ curl -X POST -H "Authorization: Bearer $SNAPSHOT_TOKEN" \
 
 ## Конфиг данных
 
-- `data/keywords.json` — ключи для weekly SERP-трекинга. Поля: `q`, `lang` (ISO 2), `country` (ISO 2), `engine` (`google` или `yandex`), `tag`. Группы: high_priority, location, project, advisor, brand_baseline, multilingual, **russian_yandex**.
-- `data/competitors.json` — наш домен + 4 конкурента
 - `data/snapshots.db` — SQLite-история (gitignored, создаётся при первом snapshot)
 
-## SERP-провайдер
-
-Используется **Bright Data SERP API** (https://brightdata.com). Покрывает Google и Yandex (плюс Bing/DuckDuckGo при желании). Стоимость для нашего объёма (~30 ключей × weekly) — около $0.50/мес. Smart-прокси и решение CAPTCHA включены.
-
-Перед первым запуском:
-1. В Bright Data dashboard создать зону типа "SERP API" — имя пойдёт в `BRIGHT_DATA_SERP_ZONE`
-2. Сгенерировать API-токен в Settings → API tokens → положить в `BRIGHT_DATA_API_KEY`
-
-## Dominance Index 2.1
+## Dominance Index 2.2
 
 ```
-DI = 0.28 × Non-brand growth (GSC non-brand clicks vs prev period)
-   + 0.22 × SERP coverage (наш Top-10 / (наш + конкуренты в Top-10))
-   + 0.18 × Lead growth (GA4 key events vs prev)
-   + 0.14 × Traffic growth (GA4 sessions vs prev)
-   + 0.10 × Sales execution (Bitrix CRM pipeline value vs prev)
-   + 0.08 × SEO execution (% Done из контент-плана)
+DI = 0.40 × Non-brand growth  (GSC non-brand clicks vs prev period)
+   + 0.25 × Lead growth       (GA4 key events vs prev)
+   + 0.20 × Traffic growth    (GA4 sessions vs prev)
+   + 0.15 × Sales execution   (Bitrix CRM pipeline value vs prev)
 ```
 
 Каждый компонент капируется в [0, 2]. Итог × 100. Статусы: ≥130 Dominating, ≥110 Gaining, ≤90 Slipping, ≤70 At Risk.
 
-**v2.1 changelog:** добавлен 6-й компонент (sales_execution через Bitrix24 pipeline). Веса остальных уменьшены пропорционально.
+**v2.2 changelog:** убраны SERP coverage и SEO execution. Их веса (22% + 8%) пропорционально перераспределены между оставшимися 4 компонентами.
 
 ## Executive Brief (LLM-нарратив)
 

@@ -36,7 +36,7 @@ const messages = {
     "dom.total.formula":
       "Композит из Web Dominance и AI Visibility, взвешенный по их влиянию на цифровой канал.",
     "dom.web.formula":
-      "GA4 + GSC + Bright Data SERP + Sheets + Bitrix. non-brand 28% · SERP-top10 22% · лиды 18% · трафик 14% · SEO-план 8% · sales 10%.",
+      "GA4 + GSC + Bitrix24. non-brand 40% · лиды 25% · трафик 20% · sales 15%.",
     "dom.ai.formula":
       "Probe ChatGPT / Claude / Perplexity / YandexGPT по 32 prompt-семьям. SOV 40% · рост 30% · позитивный sentiment 20% · цитирования 10%.",
 
@@ -138,7 +138,7 @@ const messages = {
     "s07.title": "Методология и контекст",
     "s07.desc":  "Веса индекса, отслеживаемые события, статус источников.",
     "s07.indexExplain":
-      "Dominance Index 2.0 объединяет рост non-brand, SERP-покрытие, рост лидов, рост трафика и прогресс SEO-плана.",
+      "Dominance Index 2.2 объединяет рост non-brand, рост лидов, рост трафика и pipeline в Bitrix24.",
     "s07.noLeadEvents":   "Lead события не указаны",
     "s07.noActivities":   "Активности не найдены",
     "s07.gscDisconnected": "GSC не подключен",
@@ -208,7 +208,7 @@ const messages = {
     "dom.total.formula":
       "Composite of Web Dominance and AI Visibility, weighted by their influence on the digital channel.",
     "dom.web.formula":
-      "GA4 + GSC + Bright Data SERP + Sheets + Bitrix. non-brand 28% · SERP-top10 22% · leads 18% · traffic 14% · SEO plan 8% · sales 10%.",
+      "GA4 + GSC + Bitrix24. non-brand 40% · leads 25% · traffic 20% · sales 15%.",
     "dom.ai.formula":
       "Probe of ChatGPT / Claude / Perplexity / YandexGPT across 32 prompt families. SOV 40% · growth 30% · positive sentiment 20% · citations 10%.",
 
@@ -310,7 +310,7 @@ const messages = {
     "s07.title": "Methodology and context",
     "s07.desc":  "Index weights, tracked events, source status.",
     "s07.indexExplain":
-      "Dominance Index 2.0 combines non-brand growth, SERP coverage, lead growth, traffic growth, and SEO plan progress.",
+      "Dominance Index 2.2 combines non-brand growth, lead growth, traffic growth, and Bitrix24 pipeline.",
     "s07.noLeadEvents":   "No lead events specified",
     "s07.noActivities":   "No activity events found",
     "s07.gscDisconnected": "GSC not connected",

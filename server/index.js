@@ -133,8 +133,6 @@ app.get("/api/dashboard", async (req, res) => {
     const dominance = dominanceIndex({
       ga4: ga4Data,
       gsc: gscData,
-      serp: serpData,
-      seoProgress: seoData,
       bitrix: bitrixData,
     });
 
@@ -317,7 +315,7 @@ app.post("/api/briefing/regenerate", async (req, res) => {
       ? diffSerp(serpData, serpPrevCached.payload, serpData.competitors?.us?.domain)
       : null;
     const seoData = readLatestSnapshot("seo-progress")?.payload || null;
-    const dominance = dominanceIndex({ ga4: ga4Data, gsc: gscData, serp: serpData, seoProgress: seoData });
+    const dominance = dominanceIndex({ ga4: ga4Data, gsc: gscData });
 
     const facts = briefing.buildFacts({
       meta: ga4Data?.meta,
@@ -405,10 +403,6 @@ app.post("/api/snapshot", async (req, res) => {
   const dominance = dominanceIndex({
     ga4: byLabel.ga4?.ok ? byLabel.ga4.data : null,
     gsc: byLabel.gsc?.ok ? byLabel.gsc.data : null,
-    serp: byLabel.serp?.ok ? byLabel.serp.data : readLatestSnapshot("serp")?.payload,
-    seoProgress: byLabel["seo-progress"]?.ok
-      ? byLabel["seo-progress"].data
-      : readLatestSnapshot("seo-progress")?.payload,
     bitrix: byLabel.bitrix?.ok
       ? byLabel.bitrix.data
       : readLatestSnapshot("bitrix")?.payload,
