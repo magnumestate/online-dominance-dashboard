@@ -192,47 +192,9 @@
       </section>
 
       <!-- ─────────────── 03 / COMPETITIVE SERP ─────────────── -->
+      <!-- ─────────────── 03 / ACQUISITION ─────────────── -->
       <section class="section-block">
-        <p class="section-marker"><span class="num">03</span>Competitive SERP</p>
-        <div class="section-header">
-          <div>
-            <h2 data-i18n="s03.title">Позиции Magnum Estate vs конкуренты</h2>
-            <p data-i18n="s03.desc">Weekly snapshot через Bright Data SERP API — Google + Yandex. Лучшая позиция в строке выделена золотом.</p>
-          </div>
-          <span id="serpState" class="tag muted">—</span>
-        </div>
-        <div class="serp-engine-summary" id="serpEngineSummary"></div>
-        <div class="serp-movers" id="serpMovers"></div>
-        <div class="serp-filters" id="serpFilters" role="group" aria-label="SERP filters"></div>
-        <div class="source-table-wrap">
-          <table class="serp-table" id="serpTable">
-            <thead>
-              <tr id="serpTableHead"></tr>
-            </thead>
-            <tbody id="serpTableBody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- ─────────────── 03B / GSC × SERP INTERSECTION ─────────────── -->
-      <section class="section-block">
-        <p class="section-marker"><span class="num">03B</span>Outranked</p>
-        <div class="section-header">
-          <div>
-            <h2 data-i18n="s03b.title">Где конкуренты обходят нас</h2>
-            <p data-i18n="s03b.desc">
-              Пересечение GSC (мы там ранжируемся) и SERP (где они выше).
-              Эти ключи — самые легкие апсайды: уже виден сигнал релевантности,
-              осталось обогнать одного игрока.
-            </p>
-          </div>
-        </div>
-        <div class="intersection-block" id="intersectionList"></div>
-      </section>
-
-      <!-- ─────────────── 04 / ACQUISITION ─────────────── -->
-      <section class="section-block">
-        <p class="section-marker"><span class="num">04</span>Acquisition</p>
+        <p class="section-marker"><span class="num">03</span>Acquisition</p>
         <div class="section-header">
           <div>
             <h2 data-i18n="s04.title">Источники трафика</h2>
@@ -259,82 +221,9 @@
         </div>
       </section>
 
-      <!-- ─────────────── 05 / STRATEGIC EXECUTION ─────────────── -->
+      <!-- ─────────────── 04 / TIME SERIES ─────────────── -->
       <section class="section-block">
-        <p class="section-marker"><span class="num">05</span>Strategic Execution</p>
-        <div class="section-header">
-          <div>
-            <h2>SEO Recommendations Progress</h2>
-            <p data-i18n="s05.desc">Прогресс по контент-плану — Authoritative Content sheet.</p>
-          </div>
-          <span id="seoState" class="tag muted">—</span>
-        </div>
-        <div class="progress-summary">
-          <div class="progress-pct" id="seoPct">—</div>
-          <div class="progress-bar">
-            <div class="progress-fill" id="seoFill"></div>
-          </div>
-          <div class="progress-meta" id="seoMeta">—</div>
-        </div>
-        <div class="cluster-grid" id="clusterGrid"></div>
-      </section>
-
-      <!-- ─────────────── 06 / AI VISIBILITY ─────────────── -->
-      <section class="section-block">
-        <p class="section-marker"><span class="num">06</span>AI Visibility</p>
-        <div class="section-header">
-          <div>
-            <h2 data-i18n="aiVis.title">Бренд в ответах LLM и Google AI Overviews</h2>
-            <p data-i18n="aiVis.desc">
-              Probe: ~30 prompt-семей × включённые движки (Claude, ChatGPT, Perplexity, YandexGPT)
-              — еженедельный замер Share of Voice, sentiment и цитирования.
-              AI Overviews: реальные блоки Google AI на отслеживаемых ключах.
-            </p>
-          </div>
-          <span id="aiState" class="tag muted">—</span>
-        </div>
-
-        <div class="ai-stats-grid">
-          <article class="ai-stat-card">
-            <div class="ai-stat-label">Share of Voice</div>
-            <div class="ai-stat-value" id="aiSovValue">—</div>
-            <div class="ai-stat-meta" id="aiSovMeta">—</div>
-          </article>
-          <article class="ai-stat-card">
-            <div class="ai-stat-label">Brand mentions</div>
-            <div class="ai-stat-value" id="aiMentionsValue">—</div>
-            <div class="ai-stat-meta" id="aiMentionsMeta">—</div>
-          </article>
-          <article class="ai-stat-card">
-            <div class="ai-stat-label">Cited (with link)</div>
-            <div class="ai-stat-value" id="aiCitedValue">—</div>
-            <div class="ai-stat-meta" id="aiCitedMeta">—</div>
-          </article>
-          <article class="ai-stat-card">
-            <div class="ai-stat-label">Positive sentiment</div>
-            <div class="ai-stat-value" id="aiPositiveValue">—</div>
-            <div class="ai-stat-meta" id="aiPositiveMeta">—</div>
-          </article>
-        </div>
-
-        <div class="ai-overviews-block">
-          <div class="ai-overviews-header">
-            <h3>Google AI Overviews</h3>
-            <span id="aioState" class="tag muted">—</span>
-          </div>
-          <div class="ai-overviews-stats" id="aioStats"></div>
-          <div class="ai-overviews-cards" id="aioCards"></div>
-        </div>
-
-        <div class="ai-opportunities">
-          <h3 data-i18n="aiVis.opportunities">Топ возможностей (где конкуренты упомянуты, мы — нет)</h3>
-          <ol class="ai-opportunities-list" id="aiOpportunitiesList"></ol>
-        </div>
-      </section>
-
-      <!-- ─────────────── 07 / TIME SERIES ─────────────── -->
-      <section class="section-block">
-        <p class="section-marker"><span class="num">07</span>Time Series</p>
+        <p class="section-marker"><span class="num">04</span>Time Series</p>
         <div class="section-header">
           <div>
             <h2 data-i18n="s06.title">Динамика за период</h2>
@@ -368,7 +257,7 @@
 
       <!-- ─────────────── 08 / SALES PIPELINE ─────────────── -->
       <section class="section-block">
-        <p class="section-marker"><span class="num">08</span>Sales Pipeline</p>
+        <p class="section-marker"><span class="num">05</span>Sales Pipeline</p>
         <div class="section-header">
           <div>
             <h2 data-i18n="sales.title">Лиды и сделки в Bitrix24</h2>
@@ -428,7 +317,7 @@
 
       <!-- ─────────────── 09 / EXECUTIVE BRIEF ─────────────── -->
       <section class="section-block briefing-block">
-        <p class="section-marker"><span class="num">09</span>Executive Brief</p>
+        <p class="section-marker"><span class="num">06</span>Executive Brief</p>
         <div class="section-header">
           <div>
             <h2 data-i18n="brief.title">Еженедельная сводка</h2>
@@ -461,7 +350,7 @@
 
       <!-- ─────────────── 10 / NOTES ─────────────── -->
       <section class="section-block">
-        <p class="section-marker"><span class="num">10</span>Notes &amp; Definitions</p>
+        <p class="section-marker"><span class="num">07</span>Notes &amp; Definitions</p>
         <div class="section-header">
           <div>
             <h2 data-i18n="s07.title">Методология и контекст</h2>
